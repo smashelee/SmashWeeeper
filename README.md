@@ -4,7 +4,7 @@
 
 **Многопользовательский сапёр**
 
-[![Version](https://img.shields.io/badge/Version-0.0.26_2a-blue)](https://github.com/smashelee/SmashWeeeper)
+[![Version](https://img.shields.io/badge/Version-0.0.23a-blue)](https://github.com/smashelee/SmashWeeeper)
 [![License](https://img.shields.io/badge/License-AGPL%20v3-blue)](LICENSE)
 [![Players](https://img.shields.io/badge/Players-Up%20to%206-purple)](https://smashelee.github.io/SmashWeeeper)
 [![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react)](https://react.dev)
