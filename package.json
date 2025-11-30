@@ -12,11 +12,11 @@
     "deploy": "gh-pages -d dist",
     "server": "tsx multiplayer/server.ts",
     "server:dev": "tsx watch multiplayer/server.ts",
-    "prestart": "npx prisma migrate deploy",
+    "prestart": "npx prisma migrate deploy --schema=./multiplayer/prisma/schema.prisma",
     "start": "tsx multiplayer/server.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:generate": "prisma generate --schema=./multiplayer/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=./multiplayer/prisma/schema.prisma",
+    "prisma:studio": "prisma studio --schema=./multiplayer/prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

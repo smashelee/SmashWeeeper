@@ -30,10 +30,3 @@ data/
 *.db
 
 multiplayer/
-prisma/
-render.yaml
-Dockerfile
-.dockerignore
-utils/database.ts
-utils/apiClient.ts
-utils/socketClient.ts
