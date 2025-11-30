@@ -1,0 +1,43 @@
+{
+  "name": "SmashWeeeper",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "homepage": "https://smashelee.github.io/SmashWeeeper/",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
+    "server": "tsx multiplayer/server.ts",
+    "server:dev": "tsx watch multiplayer/server.ts",
+    "prestart": "npx prisma migrate deploy",
+    "start": "tsx multiplayer/server.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.4.6",
+    "express": "^4.21.2",
+    "lucide-react": "^0.554.0",
+    "pg": "^8.16.3",
+    "prisma": "^6.19.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "gh-pages": "^6.3.0",
+    "tsx": "^4.19.2",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmashWeeeper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-solid-straight/css/uicons-solid-straight.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-bold-straight/css/uicons-bold-straight.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-bold-rounded/css/uicons-bold-rounded.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-solid-rounded/css/uicons-solid-rounded.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              'pixel': ['"Press Start 2P"', 'cursive'],
+            },
+            colors: {
+              pixel: {
+                dark: '#111827',
+                light: '#374151',
+                accent: '#8b5cf6',
+              }
+            },
+            boxShadow: {
+              'pixel': '4px 4px 0px 0px rgba(0,0,0,0.5)',
+              'pixel-sm': '2px 2px 0px 0px rgba(0,0,0,0.5)',
+              'pixel-active': 'inset 4px 4px 0px 0px rgba(0,0,0,0.5)',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #1a1e23;
+        color: #e5e7eb;
+        font-family: 'Press Start 2P', cursive;
+        image-rendering: pixelated;
+        background-image: 
+          radial-gradient(#252a30 15%, transparent 16%),
+          radial-gradient(#252a30 15%, transparent 16%);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+      }
+      ::-webkit-scrollbar {
+        width: 12px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #111827; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #4b5563; 
+        border: 2px solid #111827;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280; 
+      }
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+      }
+      input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+      }
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -20px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+      }
+      @keyframes slide-in-right {
+        from {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .animate-slide-in-right {
+        animation: slide-in-right 0.25s ease-out forwards;
+      }
+      .animate-fade-in {
+        animation: fade-in 0.3s ease-out;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      @keyframes rainbow-bg {
+        0%, 100% {
+          background-color: rgb(255, 60, 80);
+        }
+        8% {
+          background-color: rgb(255, 140, 40);
+        }
+        16% {
+          background-color: rgb(255, 220, 40);
+        }
+        25% {
+          background-color: rgb(100, 255, 100);
+        }
+        33% {
+          background-color: rgb(40, 200, 255);
+        }
+        41% {
+          background-color: rgb(60, 160, 255);
+        }
+        50% {
+          background-color: rgb(40, 240, 255);
+        }
+        58% {
+          background-color: rgb(20, 160, 255);
+        }
+        66% {
+          background-color: rgb(100, 100, 255);
+        }
+        75% {
+          background-color: rgb(200, 60, 255);
+        }
+        83% {
+          background-color: rgb(255, 60, 255);
+        }
+        91% {
+          background-color: rgb(255, 80, 140);
+        }
+      }
+      @keyframes rainbow-border {
+        0%, 100% {
+          border-color: rgb(255, 120, 140);
+        }
+        8% {
+          border-color: rgb(255, 180, 100);
+        }
+        16% {
+          border-color: rgb(255, 255, 120);
+        }
+        25% {
+          border-color: rgb(140, 255, 140);
+        }
+        33% {
+          border-color: rgb(100, 220, 255);
+        }
+        41% {
+          border-color: rgb(120, 200, 255);
+        }
+        50% {
+          border-color: rgb(100, 250, 255);
+        }
+        58% {
+          border-color: rgb(80, 200, 255);
+        }
+        66% {
+          border-color: rgb(160, 160, 255);
+        }
+        75% {
+          border-color: rgb(240, 120, 255);
+        }
+        83% {
+          border-color: rgb(255, 120, 255);
+        }
+        91% {
+          border-color: rgb(255, 140, 190);
+        }
+      }
+      .rainbow-cell {
+        animation: rainbow-bg 8s ease-in-out infinite, rainbow-border 8s ease-in-out infinite;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
