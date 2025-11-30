@@ -102,28 +102,4 @@ export const settingsClient = {
     }
   },
 
-  async getAllSettings(): Promise<Record<string, string>> {
-    try {
-      const url = new URL(`${API_URL}/api/settings`);
-      if (currentUserId) {
-        url.searchParams.append('userId', currentUserId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to get settings');
-      }
-
-      const data = await response.json();
-      return data.settings || {};
-    } catch (error: any) {
-      console.warn('Failed to get all settings:', error);
-      return {};
-    }
-  },
 };

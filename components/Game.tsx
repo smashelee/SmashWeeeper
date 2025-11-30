@@ -6,8 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { NUMBER_COLORS, GAME_VERSION } from '../constants';
 import { socketClient } from '../utils/socketClient';
 import { getGameMode } from '../utils/gameModes';
-import { settingsClient } from '../utils/settingsClient';
-import { playLoseSound, playWinSound, playCellOpenSound, playTimerSound, stopAllSounds, setSoundsEnabled, playSound, playSoundWithControl } from '../utils/sounds';
+import { playLoseSound, playWinSound, stopAllSounds } from '../utils/sounds';
 
 interface GameProps {
   config: GameConfig;
@@ -33,6 +32,9 @@ const FLAG_COLOR_MAP: Record<string, { gradient: string; border: string; shadow:
   lime: { gradient: 'from-lime-500 to-lime-600', border: 'border-lime-400', shadow: 'shadow-lime-900/50', iconColor: 'text-lime-400', textColor: 'text-[#84CC16]' },
   amber: { gradient: 'from-amber-500 to-amber-600', border: 'border-amber-400', shadow: 'shadow-amber-900/50', iconColor: 'text-amber-400', textColor: 'text-[#F59E0B]' },
   rose: { gradient: 'from-rose-500 to-rose-600', border: 'border-rose-400', shadow: 'shadow-rose-900/50', iconColor: 'text-rose-400', textColor: 'text-[#F43F5E]' },
+  sky: { gradient: 'from-sky-500 to-sky-600', border: 'border-sky-400', shadow: 'shadow-sky-900/50', iconColor: 'text-sky-400', textColor: 'text-[#0EA5E9]' },
+  violet: { gradient: 'from-violet-500 to-violet-600', border: 'border-violet-400', shadow: 'shadow-violet-900/50', iconColor: 'text-violet-400', textColor: 'text-[#8B5CF6]' },
+  fuchsia: { gradient: 'from-fuchsia-500 to-fuchsia-600', border: 'border-fuchsia-400', shadow: 'shadow-fuchsia-900/50', iconColor: 'text-fuchsia-400', textColor: 'text-[#D946EF]' },
 };
 
 interface MultiplayerPlayer {
@@ -49,7 +51,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
   const [firstClick, setFirstClick] = useState(true);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const [showGameOverModal, setShowGameOverModal] = useState(false);
-  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type?: 'sound'; playerName?: string }>>([]);
+  const [toasts, setToasts] = useState<Array<{ id: string; message: string }>>([]);
   const [selectedCell, setSelectedCell] = useState<{row: number, col: number} | null>(null);
   const [cellButtonPosition, setCellButtonPosition] = useState<{x: number, y: number} | null>(null);
   const [flagColor, setFlagColor] = useState<string>('yellow');
@@ -58,14 +60,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
   const [gameEndPlayer, setGameEndPlayer] = useState<{ name: string; isWinner: boolean } | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [turnStartTime, setTurnStartTime] = useState<number | null>(null);
-  const [soundsEnabled, setSoundsEnabledState] = useState(true);
-  const [showSoundsModal, setShowSoundsModal] = useState(false);
-  const [favoriteSounds, setFavoriteSounds] = useState<string[]>([]);
-  const [currentlyPlayingSound, setCurrentlyPlayingSound] = useState<string | null>(null);
-  const [currentAudioElement, setCurrentAudioElement] = useState<HTMLAudioElement | null>(null);
-  const [soundDurations, setSoundDurations] = useState<Map<string, number>>(new Map());
-  const [galleryAudioElements, setGalleryAudioElements] = useState<Map<string, HTMLAudioElement>>(new Map());
-  
   const syncTurnStartTime = (serverTurnStartTime: number, serverTimestamp?: number) => {
     const localNow = Date.now();
     if (serverTimestamp !== undefined) {
@@ -82,15 +76,12 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
   };
 
   useEffect(() => {
-    const loadFlagColor = async () => {
-      try {
-        const saved = await settingsClient.getSetting('flagColor');
-        if (saved) setFlagColor(saved);
-      } catch (error) {
-        console.error('Failed to load flag color:', error);
-      }
-    };
-    loadFlagColor();
+    try {
+      const saved = localStorage.getItem('flagColor');
+      if (saved) setFlagColor(saved);
+    } catch (error) {
+      console.error('Failed to load flag color:', error);
+    }
 
     const handleFlagColorChanged = (e: CustomEvent) => {
       setFlagColor(e.detail);
@@ -98,31 +89,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
     window.addEventListener('flagColorChanged', handleFlagColorChanged as EventListener);
     return () => {
       window.removeEventListener('flagColorChanged', handleFlagColorChanged as EventListener);
-    };
-  }, []);
-
-  useEffect(() => {
-    const loadSoundsEnabled = async () => {
-      try {
-        const saved = await settingsClient.getSetting('soundsEnabled');
-        if (saved !== null) {
-          const enabled = saved === 'true';
-          setSoundsEnabledState(enabled);
-          setSoundsEnabled(enabled);
-        }
-      } catch (error) {
-        console.error('Failed to load sounds setting:', error);
-      }
-    };
-    loadSoundsEnabled();
-
-    const handleSoundsEnabledChanged = (e: CustomEvent) => {
-      setSoundsEnabledState(e.detail);
-      setSoundsEnabled(e.detail);
-    };
-    window.addEventListener('soundsEnabledChanged', handleSoundsEnabledChanged as EventListener);
-    return () => {
-      window.removeEventListener('soundsEnabledChanged', handleSoundsEnabledChanged as EventListener);
     };
   }, []);
 
@@ -211,6 +177,31 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
           setMultiplayerPlayers(data.players);
         }
         if (data.status === 'won' || data.status === 'lost' || data.status === 'timeout') {
+          if (data.status === 'won') {
+            setCells(prevCells => {
+              if (prevCells.length === 0) return prevCells;
+              return prevCells.map(r => r.map(c => {
+                if (c.isMine) {
+                  return { ...c, isFlagged: true, isRevealed: true };
+                }
+                if (!c.isRevealed) {
+                  return { ...c, isRevealed: true };
+                }
+                return c;
+              }));
+            });
+          } else if (data.status === 'lost' || data.status === 'timeout') {
+            setCells(prevCells => {
+              if (prevCells.length === 0) return prevCells;
+              let newCells = prevCells.map(r => r.map(c => 
+                c.isMine ? { ...c, isRevealed: true } : c
+              ));
+              newCells = newCells.map(r => r.map(c => 
+                c.isFlagged && !c.isMine ? { ...c, isRevealed: true } : c
+              ));
+              return newCells;
+            });
+          }
           setShowGameOverModal(true);
           if (config.gameMode === 'timed' && displayTime > 0) {
             frozenTimeRef.current = displayTime;
@@ -251,7 +242,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
             }
             
             if (firstUpdate && update.isRevealed && !wasRevealed && !update.isMine) {
-              playCellOpenSound();
               firstUpdate = false;
             }
           }
@@ -284,6 +274,31 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
           setGameEndPlayer({ 
             name: data.playerName, 
             isWinner: data.status === 'won' 
+          });
+        }
+        if (data.status === 'won') {
+          setCells(prevCells => {
+            if (prevCells.length === 0) return prevCells;
+            return prevCells.map(r => r.map(c => {
+              if (c.isMine) {
+                return { ...c, isFlagged: true, isRevealed: true };
+              }
+              if (!c.isRevealed) {
+                return { ...c, isRevealed: true };
+              }
+              return c;
+            }));
+          });
+        } else if (data.status === 'lost' || data.status === 'timeout') {
+          setCells(prevCells => {
+            if (prevCells.length === 0) return prevCells;
+            let newCells = prevCells.map(r => r.map(c => 
+              c.isMine ? { ...c, isRevealed: true } : c
+            ));
+            newCells = newCells.map(r => r.map(c => 
+              c.isFlagged && !c.isMine ? { ...c, isRevealed: true } : c
+            ));
+            return newCells;
           });
         }
         setShowGameOverModal(true);
@@ -347,95 +362,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
     socketClient.on('flag_update', handleFlagUpdate);
     socketClient.on('game_state_update', handleGameStateUpdate);
 
-    const handleGallerySound = async (data: { soundName: string; playerName?: string }) => {
-      if (!soundsEnabled) return;
-      
-      let isCurrentPlayer = false;
-      if (isMultiplayer && data.playerName) {
-        const currentPlayerName = await settingsClient.getSetting('playerName');
-        isCurrentPlayer = data.playerName === currentPlayerName;
-        if (!isCurrentPlayer) {
-          const toastId = Date.now().toString() + Math.random().toString();
-          setToasts(prev => [...prev, { 
-            id: toastId, 
-            message: data.playerName || '',
-            type: 'sound'
-          }]);
-          setTimeout(() => {
-            setToasts(prev => prev.filter(t => t.id !== toastId));
-          }, 3000);
-        }
-      } else if (!isMultiplayer) {
-        isCurrentPlayer = true;
-      }
-      
-      if (isCurrentPlayer && currentlyPlayingSound === data.soundName && currentAudioElement) {
-        return;
-      }
-      
-      if (currentAudioElement) {
-        currentAudioElement.pause();
-        currentAudioElement.currentTime = 0;
-        setCurrentlyPlayingSound(null);
-        setCurrentAudioElement(null);
-      }
-      
-      setGalleryAudioElements(prev => {
-        prev.forEach((audio, soundName) => {
-          audio.pause();
-          audio.currentTime = 0;
-        });
-        return new Map();
-      });
-      
-      const audio = playSoundWithControl(`gallery/${data.soundName}`, 0.5);
-      if (audio) {
-        setGalleryAudioElements(prev => {
-          const newMap = new Map(prev);
-          newMap.set(data.soundName, audio);
-          return newMap;
-        });
-        
-        if (isCurrentPlayer) {
-          setCurrentlyPlayingSound(data.soundName);
-          setCurrentAudioElement(audio);
-        }
-        
-        audio.addEventListener('ended', () => {
-          setGalleryAudioElements(prev => {
-            const newMap = new Map(prev);
-            newMap.delete(data.soundName);
-            return newMap;
-          });
-          if (isCurrentPlayer) {
-            setCurrentlyPlayingSound(null);
-            setCurrentAudioElement(null);
-          }
-        });
-      }
-    };
-
-    const handleGallerySoundStopped = (data: { soundName: string; playerName?: string }) => {
-      setGalleryAudioElements(prev => {
-        const audio = prev.get(data.soundName);
-        if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
-          const newMap = new Map(prev);
-          newMap.delete(data.soundName);
-          return newMap;
-        }
-        return prev;
-      });
-      
-      if (currentlyPlayingSound === data.soundName) {
-        setCurrentlyPlayingSound(null);
-        setCurrentAudioElement(null);
-      }
-    };
-
-    socketClient.on('gallery_sound_played', handleGallerySound);
-    socketClient.on('gallery_sound_stopped', handleGallerySoundStopped);
 
     return () => {
       socketClient.off('game_started', handleGameStarted);
@@ -444,14 +370,12 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
       socketClient.off('cell_updates', handleCellUpdates);
       socketClient.off('flag_update', handleFlagUpdate);
       socketClient.off('game_state_update', handleGameStateUpdate);
-      socketClient.off('gallery_sound_played', handleGallerySound);
-      socketClient.off('gallery_sound_stopped', handleGallerySoundStopped);
       socketClient.off('error', handleError);
       socketClient.off('player_left', handlePlayerLeft);
       socketClient.off('player_disconnected', handlePlayerDisconnected);
       socketClient.off('timeout_game', handleTimeout);
     };
-  }, [isMultiplayer, roomCode, currentlyPlayingSound, currentAudioElement, soundsEnabled]);
+  }, [isMultiplayer, roomCode]);
 
   const getFlagColorClasses = useCallback((playerId?: string) => {
     let colorKey = flagColor;
@@ -550,7 +474,8 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
       row < 0 || row >= config.rows ||
       col < 0 || col >= config.cols ||
       newBoard[row][col].isRevealed ||
-      newBoard[row][col].isFlagged
+      newBoard[row][col].isFlagged ||
+      newBoard[row][col].isMine
     ) {
       return newBoard;
     }
@@ -617,11 +542,12 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
         setTurnStartTime(Date.now());
       }
       
-      newCells = revealCell(row, col, newCells);
-      
       if (newCells[row][col].isMine) {
         newCells = newCells.map(r => r.map(c => 
           c.isMine ? { ...c, isRevealed: true } : c
+        ));
+        newCells = newCells.map(r => r.map(c => 
+          c.isFlagged && !c.isMine ? { ...c, isRevealed: true } : c
         ));
         setStatus('lost');
         setShowGameOverModal(true);
@@ -632,7 +558,12 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
         return newCells;
       }
       
-      playCellOpenSound();
+      newCells = revealCell(row, col, newCells);
+      
+      const hasMines = newCells.some(r => r.some(c => c.isMine));
+      if (!hasMines) {
+        return newCells;
+      }
       
       const allNonMinesRevealed = newCells.every(r => 
         r.every(c => c.isMine || c.isRevealed)
@@ -647,7 +578,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
         }
         newCells = newCells.map(r => r.map(c => {
           if (c.isMine) {
-            return { ...c, isFlagged: true };
+            return { ...c, isFlagged: true, isRevealed: true };
           }
           if (!c.isRevealed) {
             return { ...c, isRevealed: true };
@@ -730,12 +661,26 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
     
     const newFlaggedState = !cells[row][col].isFlagged;
     
+    if (newFlaggedState) {
+      const currentFlaggedCount = cells.reduce((count, r) => 
+        count + r.filter(c => c.isFlagged).length, 0
+      );
+      if (currentFlaggedCount >= config.mines) {
+        const toastId = Date.now().toString() + Math.random().toString();
+        setToasts(prev => [...prev, { id: toastId, message: t.game.noFlagsLeft || 'Не осталось флагов' }]);
+        setTimeout(() => {
+          setToasts(prev => prev.filter(t => t.id !== toastId));
+        }, 2000);
+        return;
+      }
+    }
+    
     setCells(prevCells => {
       const newCells = prevCells.map(r => r.map(c => ({ ...c })));
       newCells[row][col].isFlagged = newFlaggedState;
       return newCells;
     });
-  }, [status, cells, isMultiplayer, currentTurn, playerId]);
+  }, [status, cells, isMultiplayer, currentTurn, playerId, config.mines, t]);
 
   const handleCellRightClick = useCallback((e: React.MouseEvent, row: number, col: number) => {
     e.preventDefault();
@@ -751,15 +696,9 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
   }, []);
 
   const handleExit = useCallback(() => {
-    if (currentAudioElement) {
-      currentAudioElement.pause();
-      currentAudioElement.currentTime = 0;
-      setCurrentlyPlayingSound(null);
-      setCurrentAudioElement(null);
-    }
     stopAllSounds();
     onExit();
-  }, [onExit, currentAudioElement]);
+  }, [onExit]);
 
   const handleTryAgain = useCallback(() => {
     if (isMultiplayer) {
@@ -778,170 +717,13 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
     }
   }, [initializeEmptyBoard, isMultiplayer, config.gameMode]);
 
-  const gallerySounds = [
-    'ack.mp3',
-    'among-us-role-reveal-sound.mp3',
-    'anime-ahh.mp3',
-    'arbuz-arbuz-privet.mp3',
-    'baby-laughing-meme.mp3',
-    'bolshoi-zhestkii-perdezh.mp3',
-    'bozhe-pomilui.mp3',
-    'doors-elevator-music.mp3',
-    'gimn-tvicha-bez-tsenzury.mp3',
-    'gta-san-andreas-mission-complete-sound-hq.mp3',
-    'half-life-button-2.mp3',
-    'he-he-he-ha-clash-royale-deep-fried.mp3',
-    'ia-ebu-babulku-sochnuiu-babulku.mp3',
-    'ia-konchenyi-begite.mp3',
-    'ia-rodilsia_hGybxEB.mp3',
-    'ia-sbroshu-na-vas-250000-tonn-trotila.mp3',
-    'iamete-kudasai_JnQT89a.mp3',
-    'iba-chotko.mp3',
-    'jojos-golden-wind_kL2WElB.mp3',
-    'kakashki.mp3',
-    'kava-na-nas-napali.mp3',
-    'kitaiskii-gimn_RZNjKyI.mp3',
-    'kurukuru.mp3',
-    'ladno-shokoladno.mp3',
-    'lobotomy-sound-effect.mp3',
-    'losing-cry.mp3',
-    'machomen.mp3',
-    'makan-asfalt.mp3',
-    'maksim-perdunii-iz-goroda-dalboiobovka.mp3',
-    'mi-bombo-duolingo.mp3',
-    'miau-miau-miaumiau.mp3',
-    'my-movie-6_0RlWMvM.mp3',
-    'na-ukraine-vypal-grad.mp3',
-    'ny-video-online-audio-converter.mp3',
-    'oiia-oiia-sound.mp3',
-    'okh-zria-ia-tuda-polez.mp3',
-    'omagad-poko-vzryv-versiia.mp3',
-    'o-kurwa-rakiet-full_TZKm8q4.mp3',
-    'pda_4LbLWWH.mp3',
-    'perduliatsiia.mp3',
-    'pkh.mp3',
-    'ponos_cld1odf.mp3',
-    'shakedown-dota2.mp3',
-    'skibidi-toilet.mp3',
-    'smekh-rebenka.mp3',
-    'sneaky-golem.mp3',
-    'spongebob-boowomp.mp3',
-    'taiming-s1mple.mp3',
-    'zaskamila-mamontov.mp3',
-    'zdravstvuite-nichtozhnye-nishchie-smertnye.mp3',
-  ];
-
-  const toggleFavoriteSound = useCallback((soundName: string) => {
-    setFavoriteSounds(prev => {
-      const newFavorites = prev.includes(soundName)
-        ? prev.filter(s => s !== soundName)
-        : [...prev, soundName];
-      localStorage.setItem('favoriteSounds', JSON.stringify(newFavorites));
-      return newFavorites;
-    });
-  }, []);
-
-  const playSoundPreview = useCallback((soundName: string) => {
-    if (!soundsEnabled) return;
-    
-    if (currentlyPlayingSound === soundName && currentAudioElement) {
-      currentAudioElement.pause();
-      currentAudioElement.currentTime = 0;
-      setCurrentlyPlayingSound(null);
-      setCurrentAudioElement(null);
-      
-      setGalleryAudioElements(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(soundName);
-        return newMap;
-      });
-      
-      if (isMultiplayer && roomCode) {
-        socketClient.emit('stop_gallery_sound', { soundName });
-      }
-      return;
-    }
-    
-    if (currentAudioElement) {
-      currentAudioElement.pause();
-      currentAudioElement.currentTime = 0;
-    }
-    
-    setGalleryAudioElements(prev => {
-      prev.forEach((audio, soundName) => {
-        audio.pause();
-        audio.currentTime = 0;
-      });
-      return new Map();
-    });
-    
-    if (isMultiplayer && roomCode) {
-      socketClient.emit('play_gallery_sound', { soundName });
-    }
-    
-    const audio = playSoundWithControl(`gallery/${soundName}`, 0.5);
-    if (audio) {
-      setCurrentlyPlayingSound(soundName);
-      setCurrentAudioElement(audio);
-      
-      audio.addEventListener('ended', () => {
-        setCurrentlyPlayingSound(null);
-        setCurrentAudioElement(null);
-      });
-    }
-  }, [soundsEnabled, isMultiplayer, roomCode, currentlyPlayingSound, currentAudioElement]);
 
   useEffect(() => {
     if (!isMultiplayer) {
       setCells(initializeEmptyBoard());
     }
   }, [initializeEmptyBoard, isMultiplayer]);
-
-  useEffect(() => {
-    if (!showSoundsModal) return;
-
-    const loadSoundDurations = async () => {
-      const baseUrl = (import.meta as any).env?.BASE_URL || '/';
-      const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-      const durations = new Map<string, number>();
-
-      const loadDuration = (soundName: string): Promise<void> => {
-        return new Promise((resolve) => {
-          const soundPath = `${cleanBase}/sounds/gallery/${soundName}`;
-          const audio = new Audio(soundPath);
-          
-          audio.addEventListener('loadedmetadata', () => {
-            durations.set(soundName, audio.duration);
-            resolve();
-          });
-          
-          audio.addEventListener('error', () => {
-            resolve();
-          });
-          
-          audio.load();
-        });
-      };
-
-      for (const sound of gallerySounds) {
-        if (!soundDurations.has(sound)) {
-          await loadDuration(sound);
-        }
-      }
-
-      setSoundDurations(prev => {
-        const newMap = new Map(prev);
-        durations.forEach((duration, sound) => {
-          newMap.set(sound, duration);
-        });
-        return newMap;
-      });
-    };
-
-    loadSoundDurations();
-  }, [showSoundsModal, gallerySounds, soundDurations]);
-
-
+  
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({ width: window.innerWidth, height: window.innerHeight });
@@ -963,8 +745,11 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
             socketClient.emit('timeout_game', { roomCode });
           } else {
             setCells(prevCells => {
-              const newCells = prevCells.map(r => r.map(c => 
+              let newCells = prevCells.map(r => r.map(c => 
                 c.isMine ? { ...c, isRevealed: true } : c
+              ));
+              newCells = newCells.map(r => r.map(c => 
+                c.isFlagged && !c.isMine ? { ...c, isRevealed: true } : c
               ));
               return newCells;
             });
@@ -992,8 +777,11 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
             socketClient.emit('turn_timeout', { roomCode });
           } else if (!isMultiplayer) {
             setCells(prevCells => {
-              const newCells = prevCells.map(r => r.map(c => 
+              let newCells = prevCells.map(r => r.map(c => 
                 c.isMine ? { ...c, isRevealed: true } : c
+              ));
+              newCells = newCells.map(r => r.map(c => 
+                c.isFlagged && !c.isMine ? { ...c, isRevealed: true } : c
               ));
               return newCells;
             });
@@ -1112,7 +900,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
           
           if (remaining <= 10 && remaining > 0 && Math.floor(remaining) !== lastTimerSoundRef.current) {
             lastTimerSoundRef.current = Math.floor(remaining);
-            playTimerSound();
           }
         };
         
@@ -1143,9 +930,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
               animationDelay: `${index * 0.05}s`
             }}
           >
-            {toast.type === 'sound' && (
-              <i className={`fi fi-br-music-alt text-white text-xs sm:text-sm ${!soundsEnabled ? 'opacity-50' : ''}`}></i>
-            )}
             <p className="text-[10px] sm:text-xs font-pixel text-gray-200 whitespace-nowrap">{toast.message}</p>
           </div>
         ))}
@@ -1178,7 +962,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                 <i className={`fi fi-br-flag-alt ${flagCounterColor.icon} drop-shadow-lg text-xs sm:text-base`}></i>
               </div>
               <div className={`bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-pixel text-xs sm:text-sm md:text-base ${flagCounterColor.text} shadow-lg shadow-black/30`}>
-                {config.mines - flaggedCount}
+                {Math.max(0, config.mines - flaggedCount)}
               </div>
             </div>
 
@@ -1230,7 +1014,13 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                           ${
                             cell.isRevealed
                               ? cell.isMine
-                                ? 'bg-gradient-to-br from-red-600 to-red-800 border-red-500 text-white shadow-red-900/50'
+                                ? status === 'won'
+                                  ? 'bg-gradient-to-br from-green-600 to-green-800 border-green-500 text-white shadow-green-900/50'
+                                  : status === 'lost' && cell.isFlagged
+                                  ? 'bg-gradient-to-br from-green-600 to-green-800 border-green-500 text-white shadow-green-900/50'
+                                  : 'bg-gradient-to-br from-red-600 to-red-800 border-red-500 text-white shadow-red-900/50'
+                                : status === 'lost' && cell.isFlagged && !cell.isMine
+                                ? 'bg-gradient-to-br from-[#4B5563] to-[#374151] border-[#6B7280] text-white shadow-inner'
                                 : 'bg-gradient-to-br from-[#4B5563] to-[#374151] border-[#6B7280] text-white shadow-inner'
                               : cell.isFlagged
                               ? getFlagColorClasses(cell.flaggedBy)
@@ -1248,8 +1038,15 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                       >
                         {cell.isRevealed && cell.isMine ? (
                           ''
+                        ) : status === 'lost' && cell.isFlagged && cell.isRevealed && !cell.isMine ? (
+                          <div className="relative flex items-center justify-center w-full h-full">
+                            <i className="fi fi-br-flag-alt text-white" style={{ fontSize: `${Math.max(cellSize * 0.5, 14)}px` }}></i>
+                            <i className="fi fi-br-cross text-red-500 absolute" style={{ fontSize: `${Math.max(cellSize * 0.6, 16)}px` }}></i>
+                          </div>
                         ) : cell.isFlagged ? (
-                          <i className="fi fi-br-flag-alt text-white" style={{ fontSize: `${Math.max(cellSize * 0.5, 14)}px` }}></i>
+                          <div className="relative flex items-center justify-center w-full h-full">
+                            <i className="fi fi-br-flag-alt text-white" style={{ fontSize: `${Math.max(cellSize * 0.5, 14)}px` }}></i>
+                          </div>
                         ) : cell.isRevealed && cell.neighborMines > 0 ? (
                           <span className={NUMBER_COLORS[cell.neighborMines]}>
                             {cell.neighborMines}
@@ -1304,20 +1101,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
               <button
                 onClick={() => {
                   if (selectedCell) {
-                    toggleFlag(selectedCell.row, selectedCell.col);
-                    setSelectedCell(null);
-                    setCellButtonPosition(null);
-                  }
-                }}
-                className={`w-10 h-10 rounded-lg bg-gradient-to-br ${(FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow).gradient} border-2 ${(FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow).border} flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
-                disabled={status === 'won' || status === 'lost' || (isMultiplayer && currentTurn !== playerId)}
-              >
-                <i className="fi fi-br-flag-alt text-white text-base"></i>
-              </button>
-              
-              <button
-                onClick={() => {
-                  if (selectedCell) {
                     const row = selectedCell.row;
                     const col = selectedCell.col;
                     
@@ -1336,6 +1119,20 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                 disabled={status === 'won' || status === 'lost' || cells[selectedCell.row]?.[selectedCell.col]?.isFlagged || (isMultiplayer && currentTurn !== playerId)}
               >
                 <i className="fi fi-br-shovel text-white text-base"></i>
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (selectedCell) {
+                    toggleFlag(selectedCell.row, selectedCell.col);
+                    setSelectedCell(null);
+                    setCellButtonPosition(null);
+                  }
+                }}
+                className={`w-10 h-10 rounded-lg bg-gradient-to-br ${(FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow).gradient} border-2 ${(FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow).border} flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
+                disabled={status === 'won' || status === 'lost' || (isMultiplayer && currentTurn !== playerId)}
+              >
+                <i className="fi fi-br-flag-alt text-white text-base"></i>
               </button>
               
               <button
@@ -1379,39 +1176,11 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
         >
           {t.game.exit}
         </PixelButton>
-        {isMultiplayer && (status === 'playing' || status === 'idle') && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowSoundsModal(true);
-            }}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
-              soundsEnabled
-                ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1]'
-                : 'bg-gradient-to-br from-[#374151] to-[#1F2937] border-[#4B5563]'
-            }`}
-          >
-            <i className={`fi fi-br-music-alt text-white text-base sm:text-lg ${!soundsEnabled ? 'opacity-50' : ''}`}></i>
-          </button>
-        )}
         {(!isMultiplayer || (isMultiplayer && (status === 'won' || status === 'lost' || status === 'timeout'))) && (
           <>
             <PixelButton onClick={handleTryAgain} variant="primary" className="text-[10px] sm:text-xs px-3 sm:px-4 py-2 sm:py-2.5 shadow-lg flex-1 sm:flex-none">
               {!isMultiplayer ? t.game.restart : t.game.tryAgain}
             </PixelButton>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowSoundsModal(true);
-              }}
-              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
-                soundsEnabled
-                  ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1]'
-                  : 'bg-gradient-to-br from-[#374151] to-[#1F2937] border-[#4B5563]'
-              }`}
-            >
-              <i className={`fi fi-br-music-alt text-white text-base sm:text-lg ${!soundsEnabled ? 'opacity-50' : ''}`}></i>
-            </button>
           </>
         )}
       </div>
@@ -1440,19 +1209,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
             >
               {t.game.tryAgain}
             </PixelButton>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowSoundsModal(true);
-              }}
-              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
-                soundsEnabled
-                  ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1]'
-                  : 'bg-gradient-to-br from-[#374151] to-[#1F2937] border-[#4B5563]'
-              }`}
-            >
-              <i className={`fi fi-br-music-alt text-white text-base sm:text-lg ${!soundsEnabled ? 'opacity-50' : ''}`}></i>
-            </button>
             <PixelButton 
               onClick={(e) => {
                 e.stopPropagation();
@@ -1493,19 +1249,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                 >
                   {t.game.tryAgain}
                 </PixelButton>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowSoundsModal(true);
-                  }}
-                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
-                    soundsEnabled
-                      ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1]'
-                      : 'bg-gradient-to-br from-[#374151] to-[#1F2937] border-[#4B5563]'
-                  }`}
-                >
-                  <i className={`fi fi-br-music-alt text-white text-base sm:text-lg ${!soundsEnabled ? 'opacity-50' : ''}`}></i>
-                </button>
               </>
             )}
             <PixelButton 
@@ -1530,19 +1273,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                 >
                   {t.game.tryAgain}
                 </PixelButton>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowSoundsModal(true);
-                  }}
-                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
-                    soundsEnabled
-                      ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1]'
-                      : 'bg-gradient-to-br from-[#374151] to-[#1F2937] border-[#4B5563]'
-                  }`}
-                >
-                  <i className={`fi fi-br-music-alt text-white text-base sm:text-lg ${!soundsEnabled ? 'opacity-50' : ''}`}></i>
-                </button>
               </>
             )}
           </div>
@@ -1596,19 +1326,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                 >
                   {t.game.tryAgain}
                 </PixelButton>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowSoundsModal(true);
-                  }}
-                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
-                    soundsEnabled
-                      ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1]'
-                      : 'bg-gradient-to-br from-[#374151] to-[#1F2937] border-[#4B5563]'
-                  }`}
-                >
-                  <i className={`fi fi-br-music-alt text-white text-base sm:text-lg ${!soundsEnabled ? 'opacity-50' : ''}`}></i>
-                </button>
               </>
             )}
           </div>
@@ -1649,78 +1366,6 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
           </div>
         </div>
       </Modal>
-
-      <Modal
-        isOpen={showSoundsModal}
-        onClose={() => setShowSoundsModal(false)}
-        title="Галерея звуков"
-        showCloseButton={true}
-        maxWidth="md"
-      >
-        <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
-          <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">Выберите звук</div>
-          <div className="space-y-2 sm:space-y-3 max-h-64 overflow-y-auto scrollbar-hide">
-            {(() => {
-              const favoriteSoundsList = gallerySounds.filter(sound => favoriteSounds.includes(sound));
-              const otherSoundsList = gallerySounds.filter(sound => !favoriteSounds.includes(sound));
-              const sortedSounds = [...favoriteSoundsList, ...otherSoundsList];
-              
-              return sortedSounds.map((sound, index) => {
-                const soundName = sound.replace('.mp3', '');
-                const isFavorite = favoriteSounds.includes(sound);
-                const isLastFavorite = index === favoriteSoundsList.length - 1 && favoriteSoundsList.length > 0 && otherSoundsList.length > 0;
-                const flagColorData = FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow;
-                const duration = soundDurations.get(sound);
-                const formatDuration = (seconds: number | undefined): string => {
-                  if (!seconds || isNaN(seconds)) return '--:--';
-                  const mins = Math.floor(seconds / 60);
-                  const secs = Math.floor(seconds % 60);
-                  return `${mins}:${secs.toString().padStart(2, '0')}`;
-                };
-                
-                return (
-                  <React.Fragment key={sound}>
-                    <div className="flex items-center justify-between gap-2 sm:gap-3">
-                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                        <button
-                          onClick={() => playSoundPreview(sound)}
-                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg border-2 flex items-center justify-center flex-shrink-0 hover:active:scale-90 transition-transform ${
-                            currentlyPlayingSound === sound
-                              ? `bg-gradient-to-br ${flagColorData.gradient} ${flagColorData.border} hover:opacity-80`
-                              : `bg-gradient-to-br ${flagColorData.gradient} ${flagColorData.border} hover:opacity-80`
-                          }`}
-                        >
-                          <i className={`${currentlyPlayingSound === sound ? 'fi fi-br-pause' : 'fi fi-br-play'} text-white text-xs sm:text-sm`}></i>
-                        </button>
-                        <div className="flex flex-col flex-1 min-w-0">
-                          <label className="text-xs sm:text-sm text-gray-300 font-pixel truncate">
-                            {soundName}
-                          </label>
-                          <span className="text-[10px] sm:text-xs text-gray-500 font-pixel">
-                            {formatDuration(duration)}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => toggleFavoriteSound(sound)}
-                        className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg border-2 transition-all duration-150 bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 hover:from-gray-600 hover:to-gray-700"
-                      >
-                        <i className={`${isFavorite ? 'fi fi-sr-star' : 'fi fi-br-star'} text-yellow-400 text-xs sm:text-sm`}></i>
-                      </button>
-                    </div>
-                    {isLastFavorite ? (
-                      <div className="h-px bg-gradient-to-r from-transparent via-[#6B7280] to-transparent my-2"></div>
-                    ) : index < sortedSounds.length - 1 && (
-                      <div className="h-px bg-gradient-to-r from-transparent via-[#4B5563] to-transparent"></div>
-                    )}
-                  </React.Fragment>
-                );
-              });
-            })()}
-          </div>
-        </div>
-      </Modal>
-
     </div>
   );
 };

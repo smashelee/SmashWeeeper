@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PixelButton } from './PixelButton';
 import { useLanguage } from '../contexts/LanguageContext';
 import { socketClient } from '../utils/socketClient';
@@ -6,8 +6,6 @@ import { GameConfig, GameMode, PatternId } from '../types';
 import { getGameModeTranslationKey } from '../utils/gameModes/modeHelpers';
 import { getModeNameFromTranslation } from '../utils/gameModes/i18nHelpers';
 import { getPatternMetadata, getPatternNameFromTranslation } from '../utils/patterns/patternHelpers';
-import { playJoinSound, playLeaveSound, playSound, stopAllSounds, playSoundWithControl } from '../utils/sounds';
-import { settingsClient } from '../utils/settingsClient';
 
 interface Player {
   id: string;
@@ -29,43 +27,16 @@ interface LobbyProps {
 export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initialPlayers = [], onLeave, onStart, onHostChange }) => {
   const { t } = useLanguage();
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
-  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type?: 'sound'; playerName?: string }>>([]);
+  const [toasts, setToasts] = useState<Array<{ id: string; message: string }>>([]);
   const prevPlayersRef = React.useRef<Player[]>(initialPlayers);
   const [gameMode, setGameMode] = useState<GameMode>('classic');
   const [pattern, setPattern] = useState<PatternId>('default');
-  const [soundsEnabled, setSoundsEnabled] = useState(true);
-  const [currentlyPlayingSound, setCurrentlyPlayingSound] = useState<string | null>(null);
-  const [currentAudioElement, setCurrentAudioElement] = useState<HTMLAudioElement | null>(null);
-  const [galleryAudioElements, setGalleryAudioElements] = useState<Map<string, HTMLAudioElement>>(new Map());
-
   useEffect(() => {
     if (initialPlayers.length > 0) {
       setPlayers(initialPlayers);
       prevPlayersRef.current = initialPlayers;
     }
   }, [initialPlayers]);
-
-  useEffect(() => {
-    const loadSoundsEnabled = async () => {
-      try {
-        const saved = await settingsClient.getSetting('soundsEnabled');
-        if (saved !== null) {
-          setSoundsEnabled(saved === 'true');
-        }
-      } catch (error) {
-        console.error('Failed to load sounds setting:', error);
-      }
-    };
-    loadSoundsEnabled();
-
-    const handleSoundsEnabledChanged = (e: CustomEvent) => {
-      setSoundsEnabled(e.detail);
-    };
-    window.addEventListener('soundsEnabledChanged', handleSoundsEnabledChanged as EventListener);
-    return () => {
-      window.removeEventListener('soundsEnabledChanged', handleSoundsEnabledChanged as EventListener);
-    };
-  }, []);
 
   useEffect(() => {
     const handleLobbyCreated = (data: { roomCode?: string; players: Player[]; config?: GameConfig }) => {
@@ -83,7 +54,6 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
       } else {
         setPattern('default');
       }
-      playJoinSound();
     };
 
     const handleLobbyJoined = (data: { roomCode?: string; players: Player[]; config?: GameConfig }) => {
@@ -101,7 +71,6 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
       } else {
         setPattern('default');
       }
-      playJoinSound();
     };
 
     const handlePlayerJoined = (data: { players: Player[]; playerName?: string }) => {
@@ -110,7 +79,6 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
         const prevPlayers = prevPlayersRef.current;
         const newPlayer = data.players.find(p => !prevPlayers.find(pp => pp.id === p.id));
         if (newPlayer && newPlayer.id !== playerId) {
-          playJoinSound();
           const toastId = Date.now().toString() + Math.random().toString();
           setToasts(prev => [...prev, { 
             id: toastId, 
@@ -135,7 +103,6 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
         const prevPlayers = prevPlayersRef.current;
         const leftPlayer = prevPlayers.find(p => !data.players.find(pp => pp.id === p.id));
         if (leftPlayer && leftPlayer.id !== playerId) {
-          playLeaveSound();
           const toastId = Date.now().toString() + Math.random().toString();
           setToasts(prev => [...prev, { 
             id: toastId, 
@@ -182,74 +149,6 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
       }
     };
 
-    const handleGallerySound = async (data: { soundName: string; playerName?: string }) => {
-      if (!soundsEnabled) return;
-      
-      let isCurrentPlayer = false;
-      if (data.playerName) {
-        const currentPlayerName = await settingsClient.getSetting('playerName');
-        isCurrentPlayer = data.playerName === currentPlayerName;
-        if (!isCurrentPlayer) {
-          const toastId = Date.now().toString() + Math.random().toString();
-          setToasts(prev => [...prev, { 
-            id: toastId, 
-            message: data.playerName || '',
-            type: 'sound'
-          }]);
-          setTimeout(() => {
-            setToasts(prev => prev.filter(t => t.id !== toastId));
-          }, 3000);
-        }
-      } else {
-        isCurrentPlayer = true;
-      }
-      
-      if (isCurrentPlayer && currentlyPlayingSound === data.soundName && currentAudioElement) {
-        return;
-      }
-      
-      if (currentAudioElement) {
-        currentAudioElement.pause();
-        currentAudioElement.currentTime = 0;
-        setCurrentlyPlayingSound(null);
-        setCurrentAudioElement(null);
-      }
-      
-      setGalleryAudioElements(prev => {
-        prev.forEach((audio, soundName) => {
-          audio.pause();
-          audio.currentTime = 0;
-        });
-        return new Map();
-      });
-      
-      const audio = playSoundWithControl(`gallery/${data.soundName}`, 0.5);
-      if (audio) {
-        setGalleryAudioElements(prev => {
-          const newMap = new Map(prev);
-          newMap.set(data.soundName, audio);
-          return newMap;
-        });
-        
-        if (isCurrentPlayer) {
-          setCurrentlyPlayingSound(data.soundName);
-          setCurrentAudioElement(audio);
-        }
-        
-        audio.addEventListener('ended', () => {
-          setGalleryAudioElements(prev => {
-            const newMap = new Map(prev);
-            newMap.delete(data.soundName);
-            return newMap;
-          });
-          if (isCurrentPlayer) {
-            setCurrentlyPlayingSound(null);
-            setCurrentAudioElement(null);
-          }
-        });
-      }
-    };
-
     socketClient.on('lobby_created', handleLobbyCreated);
     socketClient.on('lobby_joined', handleLobbyJoined);
     socketClient.on('player_joined', handlePlayerJoined);
@@ -257,27 +156,6 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
     socketClient.on('game_started', handleGameStarted);
     socketClient.on('lobby_players', handleLobbyPlayers);
     socketClient.on('player_ready_updated', handlePlayerReadyUpdated);
-    const handleGallerySoundStopped = (data: { soundName: string; playerName?: string }) => {
-      setGalleryAudioElements(prev => {
-        const audio = prev.get(data.soundName);
-        if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
-          const newMap = new Map(prev);
-          newMap.delete(data.soundName);
-          return newMap;
-        }
-        return prev;
-      });
-      
-      if (currentlyPlayingSound === data.soundName) {
-        setCurrentlyPlayingSound(null);
-        setCurrentAudioElement(null);
-      }
-    };
-
-    socketClient.on('gallery_sound_played', handleGallerySound);
-    socketClient.on('gallery_sound_stopped', handleGallerySoundStopped);
 
     let timeout: NodeJS.Timeout | null = null;
     if (roomCode) {
@@ -297,10 +175,8 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
       socketClient.off('game_started', handleGameStarted);
       socketClient.off('lobby_players', handleLobbyPlayers);
       socketClient.off('player_ready_updated', handlePlayerReadyUpdated);
-      socketClient.off('gallery_sound_played', handleGallerySound);
-      socketClient.off('gallery_sound_stopped', handleGallerySoundStopped);
     };
-  }, [onStart, roomCode, soundsEnabled, currentlyPlayingSound, currentAudioElement]);
+  }, [onStart, roomCode]);
 
   const handleStart = () => {
     if (isHost) {
@@ -358,9 +234,6 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
               animationDelay: `${index * 0.05}s`
             }}
           >
-            {toast.type === 'sound' && (
-              <i className={`fi fi-br-music-alt text-white text-xs sm:text-sm ${!soundsEnabled ? 'opacity-50' : ''}`}></i>
-            )}
             <p className="text-[10px] sm:text-xs font-pixel text-gray-200 whitespace-nowrap">{toast.message}</p>
           </div>
         ))}
@@ -456,7 +329,10 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
                     player.flagColor === 'emerald' ? '#10B981' :
                     player.flagColor === 'lime' ? '#84CC16' :
                     player.flagColor === 'amber' ? '#F59E0B' :
-                    player.flagColor === 'rose' ? '#F43F5E' : '#FBBF24'
+                    player.flagColor === 'rose' ? '#F43F5E' :
+                    player.flagColor === 'sky' ? '#0EA5E9' :
+                    player.flagColor === 'violet' ? '#8B5CF6' :
+                    player.flagColor === 'fuchsia' ? '#D946EF' : '#FBBF24'
                   }}
                 ></div>
               </div>

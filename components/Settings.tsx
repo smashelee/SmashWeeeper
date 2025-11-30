@@ -8,9 +8,8 @@ import { LoginModal } from './LoginModal';
 import { GameConfig } from '../types';
 import { MAX_ROWS, MAX_COLS, MIN_ROWS, MIN_COLS } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Language } from '../utils/i18n';
 import { useAuth } from '../contexts/AuthContext';
-import { validateUsername, filterLatinInput } from '../utils/validation';
-import { settingsClient } from '../utils/settingsClient';
 
 interface SettingsProps {
   config: GameConfig;
@@ -21,20 +20,23 @@ interface SettingsProps {
 type TabType = 'game' | 'multiplayer';
 
 const FLAG_COLORS = [
-  { name: 'Yellow', value: 'yellow', gradient: 'from-yellow-500 to-yellow-600', border: 'border-yellow-400', shadow: 'shadow-yellow-900/50' },
   { name: 'Red', value: 'red', gradient: 'from-red-500 to-red-600', border: 'border-red-400', shadow: 'shadow-red-900/50' },
-  { name: 'Blue', value: 'blue', gradient: 'from-blue-500 to-blue-600', border: 'border-blue-400', shadow: 'shadow-blue-900/50' },
-  { name: 'Green', value: 'green', gradient: 'from-green-500 to-green-600', border: 'border-green-400', shadow: 'shadow-green-900/50' },
-  { name: 'Purple', value: 'purple', gradient: 'from-purple-500 to-purple-600', border: 'border-purple-400', shadow: 'shadow-purple-900/50' },
-  { name: 'Pink', value: 'pink', gradient: 'from-pink-500 to-pink-600', border: 'border-pink-400', shadow: 'shadow-pink-900/50' },
-  { name: 'Orange', value: 'orange', gradient: 'from-orange-500 to-orange-600', border: 'border-orange-400', shadow: 'shadow-orange-900/50' },
-  { name: 'Cyan', value: 'cyan', gradient: 'from-cyan-500 to-cyan-600', border: 'border-cyan-400', shadow: 'shadow-cyan-900/50' },
-  { name: 'Indigo', value: 'indigo', gradient: 'from-indigo-500 to-indigo-600', border: 'border-indigo-400', shadow: 'shadow-indigo-900/50' },
-  { name: 'Teal', value: 'teal', gradient: 'from-teal-500 to-teal-600', border: 'border-teal-400', shadow: 'shadow-teal-900/50' },
-  { name: 'Emerald', value: 'emerald', gradient: 'from-emerald-500 to-emerald-600', border: 'border-emerald-400', shadow: 'shadow-emerald-900/50' },
-  { name: 'Lime', value: 'lime', gradient: 'from-lime-500 to-lime-600', border: 'border-lime-400', shadow: 'shadow-lime-900/50' },
-  { name: 'Amber', value: 'amber', gradient: 'from-amber-500 to-amber-600', border: 'border-amber-400', shadow: 'shadow-amber-900/50' },
   { name: 'Rose', value: 'rose', gradient: 'from-rose-500 to-rose-600', border: 'border-rose-400', shadow: 'shadow-rose-900/50' },
+  { name: 'Orange', value: 'orange', gradient: 'from-orange-500 to-orange-600', border: 'border-orange-400', shadow: 'shadow-orange-900/50' },
+  { name: 'Amber', value: 'amber', gradient: 'from-amber-500 to-amber-600', border: 'border-amber-400', shadow: 'shadow-amber-900/50' },
+  { name: 'Yellow', value: 'yellow', gradient: 'from-yellow-500 to-yellow-600', border: 'border-yellow-400', shadow: 'shadow-yellow-900/50' },
+  { name: 'Lime', value: 'lime', gradient: 'from-lime-500 to-lime-600', border: 'border-lime-400', shadow: 'shadow-lime-900/50' },
+  { name: 'Green', value: 'green', gradient: 'from-green-500 to-green-600', border: 'border-green-400', shadow: 'shadow-green-900/50' },
+  { name: 'Emerald', value: 'emerald', gradient: 'from-emerald-500 to-emerald-600', border: 'border-emerald-400', shadow: 'shadow-emerald-900/50' },
+  { name: 'Teal', value: 'teal', gradient: 'from-teal-500 to-teal-600', border: 'border-teal-400', shadow: 'shadow-teal-900/50' },
+  { name: 'Cyan', value: 'cyan', gradient: 'from-cyan-500 to-cyan-600', border: 'border-cyan-400', shadow: 'shadow-cyan-900/50' },
+  { name: 'Sky', value: 'sky', gradient: 'from-sky-500 to-sky-600', border: 'border-sky-400', shadow: 'shadow-sky-900/50' },
+  { name: 'Blue', value: 'blue', gradient: 'from-blue-500 to-blue-600', border: 'border-blue-400', shadow: 'shadow-blue-900/50' },
+  { name: 'Indigo', value: 'indigo', gradient: 'from-indigo-500 to-indigo-600', border: 'border-indigo-400', shadow: 'shadow-indigo-900/50' },
+  { name: 'Violet', value: 'violet', gradient: 'from-violet-500 to-violet-600', border: 'border-violet-400', shadow: 'shadow-violet-900/50' },
+  { name: 'Purple', value: 'purple', gradient: 'from-purple-500 to-purple-600', border: 'border-purple-400', shadow: 'shadow-purple-900/50' },
+  { name: 'Fuchsia', value: 'fuchsia', gradient: 'from-fuchsia-500 to-fuchsia-600', border: 'border-fuchsia-400', shadow: 'shadow-fuchsia-900/50' },
+  { name: 'Pink', value: 'pink', gradient: 'from-pink-500 to-pink-600', border: 'border-pink-400', shadow: 'shadow-pink-900/50' },
 ];
 
 export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) => {
@@ -43,6 +45,7 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
   const { user, isAuthenticated, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('game');
   const [localConfig, setLocalConfig] = useState<GameConfig>(config);
+  const [localLanguage, setLocalLanguage] = useState<Language>(language);
   const [playerName, setPlayerName] = useState<string>('Guest');
   const [flagColor, setFlagColor] = useState<string>('yellow');
   const [showToast, setShowToast] = useState(false);
@@ -50,7 +53,8 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [soundsEnabled, setSoundsEnabled] = useState(true);
+  const [winSoundEnabled, setWinSoundEnabled] = useState(true);
+  const [loseSoundEnabled, setLoseSoundEnabled] = useState(true);
   const prevConfigRef = React.useRef<string>('');
 
   useEffect(() => {
@@ -58,18 +62,16 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
       try {
         if (isAuthenticated && user) {
           setPlayerName(user.username);
-          await settingsClient.setSetting('playerName', user.username);
         } else {
-          const savedPlayerName = await settingsClient.getSetting('playerName');
-          setPlayerName(savedPlayerName || 'Guest');
+          setPlayerName('Guest');
         }
         
-        const savedColor = await settingsClient.getSetting('flagColor');
+        const savedColor = localStorage.getItem('flagColor');
         if (savedColor) {
           setFlagColor(savedColor);
         }
         
-        const savedConfig = await settingsClient.getSetting('gameConfig');
+        const savedConfig = localStorage.getItem('gameConfig');
         if (savedConfig) {
           try {
             const parsed = JSON.parse(savedConfig);
@@ -80,9 +82,26 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
           }
         }
         
-        const savedSoundsEnabled = await settingsClient.getSetting('soundsEnabled');
-        if (savedSoundsEnabled !== null) {
-          setSoundsEnabled(savedSoundsEnabled === 'true');
+        try {
+          const savedWinSound = localStorage.getItem('winSoundEnabled');
+          if (savedWinSound !== null) {
+            setWinSoundEnabled(savedWinSound === 'true');
+          }
+          const savedLoseSound = localStorage.getItem('loseSoundEnabled');
+          if (savedLoseSound !== null) {
+            setLoseSoundEnabled(savedLoseSound === 'true');
+          }
+        } catch (error) {
+          console.error('Failed to load sounds settings:', error);
+        }
+        
+        try {
+          const savedLanguage = localStorage.getItem('language');
+          if (savedLanguage === 'ru' || savedLanguage === 'en' || savedLanguage === 'ua' || savedLanguage === 'pl') {
+            setLocalLanguage(savedLanguage);
+          }
+        } catch (error) {
+          console.error('Failed to load language:', error);
         }
       } catch (error) {
         console.error('Failed to load settings:', error);
@@ -93,6 +112,10 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
 
     loadData();
   }, [isAuthenticated, user]);
+  
+  useEffect(() => {
+    setLocalLanguage(language);
+  }, [language]);
 
   const handleNumberChange = (name: string, value: number) => {
     setLocalConfig(prev => ({
@@ -101,36 +124,7 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
     }));
   };
 
-  useEffect(() => {
-    if (loading) return;
-    
-    const saveConfig = async () => {
-      let { rows, cols, mines } = localConfig;
-      
-      rows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, rows));
-      cols = Math.max(MIN_COLS, Math.min(MAX_COLS, cols));
-      
-      const maxMines = Math.floor((rows * cols) * 0.85);
-      mines = Math.max(1, Math.min(maxMines, mines));
-
-      const validatedConfig = { ...localConfig, rows, cols, mines };
-      const configString = JSON.stringify(validatedConfig);
-      
-      if (configString !== prevConfigRef.current) {
-        prevConfigRef.current = configString;
-        await settingsClient.setSetting('gameConfig', configString);
-        onSave(validatedConfig);
-      }
-    };
-
-    const timeoutId = setTimeout(() => {
-      saveConfig();
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [localConfig.rows, localConfig.cols, localConfig.mines, localConfig.gameMode, localConfig.pattern, loading, onSave]);
-
-  const validateAndSave = async () => {
+  const validateAndSave = () => {
     let { rows, cols, mines } = localConfig;
     
     rows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, rows));
@@ -141,7 +135,19 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
 
     const validatedConfig = { ...localConfig, rows, cols, mines };
     
-    await settingsClient.setSetting('gameConfig', JSON.stringify(validatedConfig));
+    try {
+      localStorage.setItem('gameConfig', JSON.stringify(validatedConfig));
+      prevConfigRef.current = JSON.stringify(validatedConfig);
+    } catch (error) {
+      console.error('Failed to save game config:', error);
+    }
+    
+    try {
+      localStorage.setItem('language', localLanguage);
+      setLanguage(localLanguage);
+    } catch (error) {
+      console.error('Failed to save language:', error);
+    }
     
     setLocalConfig(validatedConfig);
     
@@ -152,18 +158,13 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
   };
 
   const handleSaveMultiplayer = async () => {
-    if (isAuthenticated) {
-      const usernameValidation = validateUsername(playerName);
-      if (!usernameValidation.valid) {
-        setToastMessage(usernameValidation.error || 'Invalid username');
-        setShowToast(true);
-        return;
-      }
-      
-      await settingsClient.setSetting('playerName', playerName.trim());
+    
+    try {
+      localStorage.setItem('flagColor', flagColor);
+      window.dispatchEvent(new CustomEvent('flagColorChanged', { detail: flagColor }));
+    } catch (error) {
+      console.error('Failed to save flag color:', error);
     }
-    await settingsClient.setSetting('flagColor', flagColor);
-    window.dispatchEvent(new CustomEvent('flagColorChanged', { detail: flagColor }));
     
     setToastMessage(t.settings.saved);
     setShowToast(true);
@@ -172,13 +173,11 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
   const handleLogout = async () => {
     logout();
     setPlayerName('Guest');
-    await settingsClient.setSetting('playerName', 'Guest');
   };
 
   const handleAuthSuccess = async () => {
     if (user) {
       setPlayerName(user.username);
-      await settingsClient.setSetting('playerName', user.username);
     }
   };
 
@@ -283,9 +282,9 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
               <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.settings.language}</div>
               <div className="flex gap-1.5 sm:gap-2 justify-center">
                 <button 
-                  onClick={() => setLanguage('en')} 
+                  onClick={() => setLocalLanguage('en')} 
                   className={`px-2 sm:px-3 py-1.5 sm:py-2 md:py-2.5 rounded-lg shadow-lg transition-all duration-150 min-w-[50px] sm:min-w-[60px] flex items-center justify-center ${
-                    language === 'en' 
+                    localLanguage === 'en' 
                       ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50' 
                       : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600'
                   }`}
@@ -294,9 +293,9 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   <img src={`${baseUrl}flags/en.png`} alt="EN" className="w-6 h-4 sm:w-8 sm:h-5 object-cover rounded" />
                 </button>
                 <button 
-                  onClick={() => setLanguage('ru')} 
+                  onClick={() => setLocalLanguage('ru')} 
                   className={`px-2 sm:px-3 py-1.5 sm:py-2 md:py-2.5 rounded-lg shadow-lg transition-all duration-150 min-w-[50px] sm:min-w-[60px] flex items-center justify-center ${
-                    language === 'ru' 
+                    localLanguage === 'ru' 
                       ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50' 
                       : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600'
                   }`}
@@ -305,9 +304,9 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   <img src={`${baseUrl}flags/ru.png`} alt="RU" className="w-6 h-4 sm:w-8 sm:h-5 object-cover rounded" />
                 </button>
                 <button 
-                  onClick={() => setLanguage('ua')} 
+                  onClick={() => setLocalLanguage('ua')} 
                   className={`px-2 sm:px-3 py-1.5 sm:py-2 md:py-2.5 rounded-lg shadow-lg transition-all duration-150 min-w-[50px] sm:min-w-[60px] flex items-center justify-center ${
-                    language === 'ua' 
+                    localLanguage === 'ua' 
                       ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50' 
                       : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600'
                   }`}
@@ -316,9 +315,9 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   <img src={`${baseUrl}flags/ua.png`} alt="UA" className="w-6 h-4 sm:w-8 sm:h-5 object-cover rounded" />
                 </button>
                 <button 
-                  onClick={() => setLanguage('pl')} 
+                  onClick={() => setLocalLanguage('pl')} 
                   className={`px-2 sm:px-3 py-1.5 sm:py-2 md:py-2.5 rounded-lg shadow-lg transition-all duration-150 min-w-[50px] sm:min-w-[60px] flex items-center justify-center ${
-                    language === 'pl' 
+                    localLanguage === 'pl' 
                       ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50' 
                       : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600'
                   }`}
@@ -329,24 +328,71 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-xl p-3 sm:p-4">
-              <button
-                onClick={async () => {
-                  const newValue = !soundsEnabled;
-                  setSoundsEnabled(newValue);
-                  await settingsClient.setSetting('soundsEnabled', newValue.toString());
-                  window.dispatchEvent(new CustomEvent('soundsEnabledChanged', { detail: newValue }));
-                  const { setSoundsEnabled: updateSoundsEnabled } = await import('../utils/sounds');
-                  updateSoundsEnabled(newValue);
-                }}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-pixel text-xs sm:text-sm transition-all duration-200 ${
-                  soundsEnabled
-                    ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] text-white shadow-lg shadow-[#4F46E5]/30'
-                    : 'bg-gradient-to-br from-[#374151] to-[#1F2937] border-2 border-[#4B5563] text-gray-300'
-                }`}
-              >
-                {t.settings.sounds}: {soundsEnabled ? t.settings.yes : t.settings.no}
-              </button>
+            <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.settings.sounds}</div>
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center justify-between gap-2 sm:gap-3">
+                  <label className="text-xs sm:text-sm text-gray-300 font-pixel flex-1 min-w-0">
+                    {t.settings.victory || 'Victory'}
+                  </label>
+                  <button
+                    onClick={async () => {
+                      const newValue = !winSoundEnabled;
+                      setWinSoundEnabled(newValue);
+                      try {
+                        localStorage.setItem('winSoundEnabled', newValue.toString());
+                        window.dispatchEvent(new CustomEvent('winSoundEnabledChanged', { detail: newValue }));
+                        const { setWinSoundEnabled: updateWinSoundEnabled } = await import('../utils/sounds');
+                        updateWinSoundEnabled(newValue);
+                      } catch (error) {
+                        console.error('Failed to save win sound setting:', error);
+                      }
+                    }}
+                    className={`flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg border-2 transition-all duration-150 ${
+                      winSoundEnabled
+                        ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1] shadow-[#4F46E5]/50'
+                        : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 hover:from-gray-600 hover:to-gray-700'
+                    }`}
+                  >
+                    {winSoundEnabled && (
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <div className="h-px bg-gradient-to-r from-transparent via-[#4B5563] to-transparent"></div>
+                <div className="flex items-center justify-between gap-2 sm:gap-3">
+                  <label className="text-xs sm:text-sm text-gray-300 font-pixel flex-1 min-w-0">
+                    {t.settings.defeat || 'Defeat'}
+                  </label>
+                  <button
+                    onClick={async () => {
+                      const newValue = !loseSoundEnabled;
+                      setLoseSoundEnabled(newValue);
+                      try {
+                        localStorage.setItem('loseSoundEnabled', newValue.toString());
+                        window.dispatchEvent(new CustomEvent('loseSoundEnabledChanged', { detail: newValue }));
+                        const { setLoseSoundEnabled: updateLoseSoundEnabled } = await import('../utils/sounds');
+                        updateLoseSoundEnabled(newValue);
+                      } catch (error) {
+                        console.error('Failed to save lose sound setting:', error);
+                      }
+                    }}
+                    className={`flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg border-2 transition-all duration-150 ${
+                      loseSoundEnabled
+                        ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1] shadow-[#4F46E5]/50'
+                        : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 hover:from-gray-600 hover:to-gray-700'
+                    }`}
+                  >
+                    {loseSoundEnabled && (
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-2 sm:gap-3 w-full pt-2 px-0.5 sm:px-0">
@@ -398,14 +444,15 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   <input
                     type="text"
                     value={playerName}
-                    onChange={(e) => {
-                      const filtered = filterLatinInput(e.target.value);
-                      setPlayerName(filtered);
-                    }}
-                    maxLength={20}
-                    className="w-full bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-gray-200 focus:outline-none focus:border-[#6366F1]"
+                    disabled
+                    className="w-full bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-gray-400 cursor-not-allowed opacity-60"
                     placeholder={t.settings.playerName}
                   />
+                  {isAuthenticated && (
+                    <div className="text-[10px] sm:text-xs text-gray-500 text-center">
+                      {t.settings.nameCannotBeChanged}
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
@@ -419,7 +466,7 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                               <i className="fi fi-br-flag-alt text-white text-xs sm:text-sm"></i>
                             </div>
                             <label className="text-xs sm:text-sm text-gray-300 font-pixel flex-1 min-w-0">
-                              {t.settings.colors[color.value as 'yellow' | 'red' | 'blue' | 'green' | 'purple' | 'pink' | 'orange' | 'cyan' | 'indigo' | 'teal' | 'emerald' | 'lime' | 'amber' | 'rose']}
+                              {t.settings.colors[color.value as 'yellow' | 'red' | 'blue' | 'green' | 'purple' | 'pink' | 'orange' | 'cyan' | 'indigo' | 'teal' | 'emerald' | 'lime' | 'amber' | 'rose' | 'sky' | 'violet' | 'fuchsia']}
                             </label>
                           </div>
                           <button

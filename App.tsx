@@ -15,7 +15,6 @@ import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
 import { socketClient } from './utils/socketClient';
 import { settingsClient, setUserId } from './utils/settingsClient';
-import { playJoinSound } from './utils/sounds';
 import './utils/patterns';
 
 const generateGuestPlayerId = (): string => {
@@ -54,56 +53,32 @@ const App: React.FC = () => {
           setUserId(user.id);
         }
 
-        const migrateFromLocalStorage = async () => {
-          const migrated = await settingsClient.getSetting('migrated');
-          if (!migrated) {
-            const lsGameConfig = localStorage.getItem('gameConfig');
-            const lsFlagColor = localStorage.getItem('flagColor');
-            const lsLanguage = localStorage.getItem('language');
-            const lsPlayerId = localStorage.getItem('playerId');
-            const lsPlayerName = localStorage.getItem('playerName');
-            const lsUserId = localStorage.getItem('userId');
-
-            if (lsGameConfig) await settingsClient.setSetting('gameConfig', lsGameConfig);
-            if (lsFlagColor) await settingsClient.setSetting('flagColor', lsFlagColor);
-            if (lsLanguage) await settingsClient.setSetting('language', lsLanguage);
-            if (lsPlayerId) await settingsClient.setSetting('playerId', lsPlayerId);
-            if (lsPlayerName) await settingsClient.setSetting('playerName', lsPlayerName);
-            if (lsUserId) await settingsClient.setSetting('userId', lsUserId);
-
-            await settingsClient.setSetting('migrated', 'true');
-          }
-        };
-
-        await migrateFromLocalStorage();
-
-        const savedConfig = await settingsClient.getSetting('gameConfig');
+        const savedConfig = localStorage.getItem('gameConfig');
         if (savedConfig) {
           try {
             const parsed = JSON.parse(savedConfig);
             setConfig({ rows: 9, cols: 9, mines: 10, ...parsed, gameMode: parsed.gameMode || 'classic', pattern: parsed.pattern || 'default' });
           } catch (e) {
             console.error('Failed to parse game config:', e);
+            setConfig({ rows: 9, cols: 9, mines: 10, gameMode: 'classic', pattern: 'default' });
           }
         } else {
           setConfig({ rows: 9, cols: 9, mines: 10, gameMode: 'classic', pattern: 'default' });
         }
 
-        const savedFlagColor = await settingsClient.getSetting('flagColor');
+        const savedFlagColor = localStorage.getItem('flagColor');
         if (savedFlagColor) {
           setFlagColor(savedFlagColor);
         }
 
         if (isAuthenticated && user) {
           setPlayerName(user.username);
-          await settingsClient.setSetting('playerName', user.username);
           if (user.playerId) {
             setPlayerId(user.playerId);
             await settingsClient.setSetting('playerId', user.playerId);
           }
         } else {
-          const savedPlayerName = await settingsClient.getSetting('playerName');
-          setPlayerName(savedPlayerName || 'Guest');
+          setPlayerName('Guest');
 
           const savedPlayerId = await settingsClient.getSetting('playerId');
           if (!savedPlayerId || savedPlayerId.length !== 7 || !/^\d+$/.test(savedPlayerId)) {
@@ -176,7 +151,11 @@ const App: React.FC = () => {
   const handleGameModeSelected = async (gameMode: 'classic' | 'timed', pattern: 'default') => {
     const newConfig = { ...config, gameMode, pattern };
     setConfig(newConfig);
-    await settingsClient.setSetting('gameConfig', JSON.stringify(newConfig));
+    try {
+      localStorage.setItem('gameConfig', JSON.stringify(newConfig));
+    } catch (error) {
+      console.error('Failed to save game config:', error);
+    }
     setShowGameModeSelect(false);
     setIsMultiplayer(false);
     setScreen(AppScreen.GAME);
@@ -195,7 +174,6 @@ const App: React.FC = () => {
       setRoomCode(data.roomCode);
       setInitialPlayers(data.players || []);
       setMultiplayerModal('lobby');
-      playJoinSound();
       socketClient.off('lobby_created', handleLobbyCreated);
     };
 
@@ -218,7 +196,6 @@ const App: React.FC = () => {
       setConfig(data.config);
       setInitialPlayers(data.players || []);
       setMultiplayerModal('lobby');
-      playJoinSound();
     };
 
     const handleJoinFailed = (data: { message: string }) => {
@@ -342,7 +319,7 @@ const App: React.FC = () => {
               if (MULTIPLAYER_UNDER_MAINTENANCE) {
                 setMultiplayerModal('select');
               } else {
-                const currentName = await settingsClient.getSetting('playerName') || 'Guest';
+                const currentName = isAuthenticated && user ? user.username : 'Guest';
                 if (currentName === 'Guest' || !isAuthenticated) {
                   setShowDefaultNicknameWarning(true);
                 } else {
@@ -401,7 +378,6 @@ const App: React.FC = () => {
           <MultiplayerModeSelect
             onSelectHost={() => setMultiplayerModal('create')}
             onSelectPlayer={() => setMultiplayerModal('join')}
-            onClose={() => setMultiplayerModal(null)}
           />
         )}
       </Modal>

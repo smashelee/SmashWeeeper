@@ -4,7 +4,6 @@ import { NumberInput } from './NumberInput';
 import { GameConfig, GameMode, PatternId } from '../types';
 import { MAX_ROWS, MAX_COLS, MIN_ROWS, MIN_COLS } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
-import { settingsClient } from '../utils/settingsClient';
 import { getMultiplayerGameModes } from '../utils/gameModes';
 import { getModeNameFromTranslation } from '../utils/gameModes/i18nHelpers';
 import { getAllPatterns } from '../utils/patterns/patternHelpers';
@@ -25,22 +24,19 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onBack, onCreate }) => {
   const [showModeError, setShowModeError] = useState(false);
 
   useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        const saved = await settingsClient.getSetting('gameConfig');
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            setLocalConfig({ ...parsed, gameMode: parsed.gameMode || 'classic', pattern: defaultPattern });
-          } catch (e) {
-            console.error('Failed to parse saved game config', e);
-          }
+    try {
+      const saved = localStorage.getItem('gameConfig');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setLocalConfig({ ...parsed, gameMode: parsed.gameMode || 'classic', pattern: defaultPattern });
+        } catch (e) {
+          console.error('Failed to parse saved game config', e);
         }
-      } catch (error) {
-        console.error('Failed to load game config:', error);
       }
-    };
-    loadConfig();
+    } catch (error) {
+      console.error('Failed to load game config:', error);
+    }
   }, []);
 
   const handleNumberChange = (name: string, value: number) => {

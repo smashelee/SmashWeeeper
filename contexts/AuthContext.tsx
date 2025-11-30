@@ -62,7 +62,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             await settingsClient.setSetting('userId', serverUser.userId.toString());
             await settingsClient.setSetting('playerId', serverUser.playerId);
-            await settingsClient.setSetting('playerName', serverUser.username);
           } else {
             setUser(null);
             setUserId(null);
@@ -71,7 +70,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
             await settingsClient.setSetting('userId', '');
             await settingsClient.setSetting('playerId', '');
-            await settingsClient.setSetting('playerName', 'Guest');
           }
         } else {
           const API_URL = getApiUrl();
@@ -132,7 +130,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     await settingsClient.setSetting('userId', result.userId.toString());
     await settingsClient.setSetting('playerId', result.playerId);
-    await settingsClient.setSetting('playerName', result.username);
   };
 
   const register = async (username: string, password: string, confirmPassword: string) => {
@@ -159,7 +156,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     await settingsClient.setSetting('userId', result.userId.toString());
     await settingsClient.setSetting('playerId', result.playerId);
-    await settingsClient.setSetting('playerName', result.username);
   };
 
   const logout = () => {
@@ -170,7 +166,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     settingsClient.setSetting('userId', '');
     settingsClient.setSetting('playerId', '');
-    settingsClient.setSetting('playerName', 'Guest');
   };
 
   return (

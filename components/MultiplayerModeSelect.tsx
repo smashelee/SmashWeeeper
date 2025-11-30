@@ -4,7 +4,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 interface MultiplayerModeSelectProps {
   onSelectHost: () => void;
   onSelectPlayer: () => void;
-  onClose: () => void;
 }
 
 export const MultiplayerModeSelect: React.FC<MultiplayerModeSelectProps> = ({

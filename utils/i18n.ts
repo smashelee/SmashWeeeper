@@ -24,6 +24,9 @@ export const translations = {
       cols: 'Cols',
       mines: 'Mines',
       sounds: 'Sounds',
+      victory: 'Victory',
+      defeat: 'Defeat',
+      nameCannotBeChanged: 'Name cannot be changed, temporarily!',
       yes: 'YES',
       no: 'NO',
       colors: {
@@ -41,6 +44,9 @@ export const translations = {
         lime: 'Lime',
         amber: 'Amber',
         rose: 'Rose',
+        sky: 'Sky',
+        violet: 'Violet',
+        fuchsia: 'Fuchsia',
       },
     },
     game: {
@@ -162,6 +168,9 @@ export const translations = {
       cols: 'Столбцы',
       mines: 'Мины',
       sounds: 'Звуки',
+      victory: 'Победа',
+      defeat: 'Поражение',
+      nameCannotBeChanged: 'Имя нельзя менять, временно!',
       yes: 'ДА',
       no: 'НЕТ',
       colors: {
@@ -179,6 +188,9 @@ export const translations = {
         lime: 'Лайм',
         amber: 'Янтарный',
         rose: 'Малиновый',
+        sky: 'Небесный',
+        violet: 'Фиолетовый',
+        fuchsia: 'Фуксия',
       },
     },
     game: {
@@ -300,6 +312,9 @@ export const translations = {
       cols: 'Стовпці',
       mines: 'Міни',
       sounds: 'Звуки',
+      victory: 'Перемога',
+      defeat: 'Поразка',
+      nameCannotBeChanged: 'Ім`я не можна змінювати, тимчасово!',
       yes: 'ДА',
       no: 'НЕТ',
       colors: {
@@ -317,6 +332,9 @@ export const translations = {
         lime: 'Лайм',
         amber: 'Бурштиновий',
         rose: 'Трояндовий',
+        sky: 'Небесний',
+        violet: 'Фіолетовий',
+        fuchsia: 'Фуксія',
       },
     },
     game: {
@@ -438,6 +456,9 @@ export const translations = {
       cols: 'Kolumny',
       mines: 'Miny',
       sounds: 'Dźwięki',
+      victory: 'Zwycięstwo',
+      defeat: 'Porażka',
+      nameCannotBeChanged: 'Nazwy nie można zmienić, tymczasowo!',
       yes: 'TAK',
       no: 'NIE',
       colors: {
@@ -455,6 +476,9 @@ export const translations = {
         lime: 'Limonkowy',
         amber: 'Bursztynowy',
         rose: 'Różany',
+        sky: 'Błękitny',
+        violet: 'Fiołkowy',
+        fuchsia: 'Fuksja',
       },
     },
     game: {
