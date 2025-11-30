@@ -10,7 +10,7 @@ import { MAX_ROWS, MAX_COLS, MIN_ROWS, MIN_COLS } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { validateUsername, filterLatinInput } from '../utils/validation';
-import { db } from '../utils/database';
+import { settingsClient } from '../utils/settingsClient';
 
 interface SettingsProps {
   config: GameConfig;
@@ -51,36 +51,36 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [soundsEnabled, setSoundsEnabled] = useState(true);
+  const prevConfigRef = React.useRef<string>('');
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        await db.init();
-
         if (isAuthenticated && user) {
           setPlayerName(user.username);
-          await db.setSetting('playerName', user.username);
+          await settingsClient.setSetting('playerName', user.username);
         } else {
-          const savedPlayerName = await db.getSetting('playerName');
+          const savedPlayerName = await settingsClient.getSetting('playerName');
           setPlayerName(savedPlayerName || 'Guest');
         }
         
-        const savedColor = await db.getSetting('flagColor');
+        const savedColor = await settingsClient.getSetting('flagColor');
         if (savedColor) {
           setFlagColor(savedColor);
         }
         
-        const savedConfig = await db.getSetting('gameConfig');
+        const savedConfig = await settingsClient.getSetting('gameConfig');
         if (savedConfig) {
           try {
             const parsed = JSON.parse(savedConfig);
             setLocalConfig(parsed);
+            prevConfigRef.current = savedConfig;
           } catch (e) {
             console.error('Failed to parse saved game config', e);
           }
         }
         
-        const savedSoundsEnabled = await db.getSetting('soundsEnabled');
+        const savedSoundsEnabled = await settingsClient.getSetting('soundsEnabled');
         if (savedSoundsEnabled !== null) {
           setSoundsEnabled(savedSoundsEnabled === 'true');
         }
@@ -102,9 +102,9 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
   };
 
   useEffect(() => {
+    if (loading) return;
+    
     const saveConfig = async () => {
-      if (loading) return;
-      
       let { rows, cols, mines } = localConfig;
       
       rows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, rows));
@@ -114,9 +114,13 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
       mines = Math.max(1, Math.min(maxMines, mines));
 
       const validatedConfig = { ...localConfig, rows, cols, mines };
+      const configString = JSON.stringify(validatedConfig);
       
-      await db.setSetting('gameConfig', JSON.stringify(validatedConfig));
-      onSave(validatedConfig);
+      if (configString !== prevConfigRef.current) {
+        prevConfigRef.current = configString;
+        await settingsClient.setSetting('gameConfig', configString);
+        onSave(validatedConfig);
+      }
     };
 
     const timeoutId = setTimeout(() => {
@@ -124,7 +128,7 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [localConfig.rows, localConfig.cols, localConfig.mines, loading, onSave]);
+  }, [localConfig.rows, localConfig.cols, localConfig.mines, localConfig.gameMode, localConfig.pattern, loading, onSave]);
 
   const validateAndSave = async () => {
     let { rows, cols, mines } = localConfig;
@@ -137,7 +141,7 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
 
     const validatedConfig = { ...localConfig, rows, cols, mines };
     
-    await db.setSetting('gameConfig', JSON.stringify(validatedConfig));
+    await settingsClient.setSetting('gameConfig', JSON.stringify(validatedConfig));
     
     setLocalConfig(validatedConfig);
     
@@ -156,9 +160,9 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
         return;
       }
       
-      await db.setSetting('playerName', playerName.trim());
+      await settingsClient.setSetting('playerName', playerName.trim());
     }
-    await db.setSetting('flagColor', flagColor);
+    await settingsClient.setSetting('flagColor', flagColor);
     window.dispatchEvent(new CustomEvent('flagColorChanged', { detail: flagColor }));
     
     setToastMessage(t.settings.saved);
@@ -168,13 +172,13 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
   const handleLogout = async () => {
     logout();
     setPlayerName('Guest');
-    await db.setSetting('playerName', 'Guest');
+    await settingsClient.setSetting('playerName', 'Guest');
   };
 
   const handleAuthSuccess = async () => {
     if (user) {
       setPlayerName(user.username);
-      await db.setSetting('playerName', user.username);
+      await settingsClient.setSetting('playerName', user.username);
     }
   };
 
@@ -330,7 +334,7 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                 onClick={async () => {
                   const newValue = !soundsEnabled;
                   setSoundsEnabled(newValue);
-                  await db.setSetting('soundsEnabled', newValue.toString());
+                  await settingsClient.setSetting('soundsEnabled', newValue.toString());
                   window.dispatchEvent(new CustomEvent('soundsEnabledChanged', { detail: newValue }));
                   const { setSoundsEnabled: updateSoundsEnabled } = await import('../utils/sounds');
                   updateSoundsEnabled(newValue);

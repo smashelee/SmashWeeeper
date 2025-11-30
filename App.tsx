@@ -14,7 +14,8 @@ import { MULTIPLAYER_UNDER_MAINTENANCE } from './constants';
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
 import { socketClient } from './utils/socketClient';
-import { db } from './utils/database';
+import { settingsClient, setUserId } from './utils/settingsClient';
+import { playJoinSound } from './utils/sounds';
 import './utils/patterns';
 
 const generateGuestPlayerId = (): string => {
@@ -28,7 +29,7 @@ const generateGuestPlayerId = (): string => {
 
 const App: React.FC = () => {
   const { t } = useLanguage();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState<AppScreen>(AppScreen.MENU);
   const [config, setConfig] = useState<GameConfig>({ rows: 9, cols: 9, mines: 10 });
   const [multiplayerModal, setMultiplayerModal] = useState<'select' | 'create' | 'join' | 'lobby' | null>(null);
@@ -46,11 +47,15 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      if (authLoading) return;
+      
       try {
-        await db.init();
+        if (isAuthenticated && user) {
+          setUserId(user.id);
+        }
 
         const migrateFromLocalStorage = async () => {
-          const migrated = await db.getSetting('migrated');
+          const migrated = await settingsClient.getSetting('migrated');
           if (!migrated) {
             const lsGameConfig = localStorage.getItem('gameConfig');
             const lsFlagColor = localStorage.getItem('flagColor');
@@ -59,20 +64,20 @@ const App: React.FC = () => {
             const lsPlayerName = localStorage.getItem('playerName');
             const lsUserId = localStorage.getItem('userId');
 
-            if (lsGameConfig) await db.setSetting('gameConfig', lsGameConfig);
-            if (lsFlagColor) await db.setSetting('flagColor', lsFlagColor);
-            if (lsLanguage) await db.setSetting('language', lsLanguage);
-            if (lsPlayerId) await db.setSetting('playerId', lsPlayerId);
-            if (lsPlayerName) await db.setSetting('playerName', lsPlayerName);
-            if (lsUserId) await db.setSetting('userId', lsUserId);
+            if (lsGameConfig) await settingsClient.setSetting('gameConfig', lsGameConfig);
+            if (lsFlagColor) await settingsClient.setSetting('flagColor', lsFlagColor);
+            if (lsLanguage) await settingsClient.setSetting('language', lsLanguage);
+            if (lsPlayerId) await settingsClient.setSetting('playerId', lsPlayerId);
+            if (lsPlayerName) await settingsClient.setSetting('playerName', lsPlayerName);
+            if (lsUserId) await settingsClient.setSetting('userId', lsUserId);
 
-            await db.setSetting('migrated', 'true');
+            await settingsClient.setSetting('migrated', 'true');
           }
         };
 
         await migrateFromLocalStorage();
 
-        const savedConfig = await db.getSetting('gameConfig');
+        const savedConfig = await settingsClient.getSetting('gameConfig');
         if (savedConfig) {
           try {
             const parsed = JSON.parse(savedConfig);
@@ -84,27 +89,27 @@ const App: React.FC = () => {
           setConfig({ rows: 9, cols: 9, mines: 10, gameMode: 'classic', pattern: 'default' });
         }
 
-        const savedFlagColor = await db.getSetting('flagColor');
+        const savedFlagColor = await settingsClient.getSetting('flagColor');
         if (savedFlagColor) {
           setFlagColor(savedFlagColor);
         }
 
         if (isAuthenticated && user) {
           setPlayerName(user.username);
-          await db.setSetting('playerName', user.username);
+          await settingsClient.setSetting('playerName', user.username);
           if (user.playerId) {
             setPlayerId(user.playerId);
-            await db.setSetting('playerId', user.playerId);
+            await settingsClient.setSetting('playerId', user.playerId);
           }
         } else {
-          const savedPlayerName = await db.getSetting('playerName');
+          const savedPlayerName = await settingsClient.getSetting('playerName');
           setPlayerName(savedPlayerName || 'Guest');
 
-          const savedPlayerId = await db.getSetting('playerId');
+          const savedPlayerId = await settingsClient.getSetting('playerId');
           if (!savedPlayerId || savedPlayerId.length !== 7 || !/^\d+$/.test(savedPlayerId)) {
             const newGuestId = generateGuestPlayerId();
             setPlayerId(newGuestId);
-            await db.setSetting('playerId', newGuestId);
+            await settingsClient.setSetting('playerId', newGuestId);
           } else {
             setPlayerId(savedPlayerId);
           }
@@ -117,7 +122,7 @@ const App: React.FC = () => {
     };
 
     loadData();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, authLoading]);
 
   useEffect(() => {
     const connect = async () => {
@@ -171,7 +176,7 @@ const App: React.FC = () => {
   const handleGameModeSelected = async (gameMode: 'classic' | 'timed', pattern: 'default') => {
     const newConfig = { ...config, gameMode, pattern };
     setConfig(newConfig);
-    await db.setSetting('gameConfig', JSON.stringify(newConfig));
+    await settingsClient.setSetting('gameConfig', JSON.stringify(newConfig));
     setShowGameModeSelect(false);
     setIsMultiplayer(false);
     setScreen(AppScreen.GAME);
@@ -190,6 +195,7 @@ const App: React.FC = () => {
       setRoomCode(data.roomCode);
       setInitialPlayers(data.players || []);
       setMultiplayerModal('lobby');
+      playJoinSound();
       socketClient.off('lobby_created', handleLobbyCreated);
     };
 
@@ -212,6 +218,7 @@ const App: React.FC = () => {
       setConfig(data.config);
       setInitialPlayers(data.players || []);
       setMultiplayerModal('lobby');
+      playJoinSound();
     };
 
     const handleJoinFailed = (data: { message: string }) => {
@@ -335,7 +342,7 @@ const App: React.FC = () => {
               if (MULTIPLAYER_UNDER_MAINTENANCE) {
                 setMultiplayerModal('select');
               } else {
-                const currentName = await db.getSetting('playerName') || 'Guest';
+                const currentName = await settingsClient.getSetting('playerName') || 'Guest';
                 if (currentName === 'Guest' || !isAuthenticated) {
                   setShowDefaultNicknameWarning(true);
                 } else {

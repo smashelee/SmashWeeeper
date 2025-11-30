@@ -1,15 +1,11 @@
-const loseSounds = ['litvin.mp3', 'lobotomy.mp3', 'sigma.mp3'];
-const winSounds = ['koleni.mp3'];
-
 let soundsEnabled = true;
 const activeAudioElements: HTMLAudioElement[] = [];
 
 if (typeof window !== 'undefined') {
   const loadSoundsSetting = async () => {
     try {
-      const { db } = await import('./database.js');
-      await db.init();
-      const saved = await db.getSetting('soundsEnabled');
+      const { settingsClient } = await import('./settingsClient.js');
+      const saved = await settingsClient.getSetting('soundsEnabled');
       if (saved !== null) {
         soundsEnabled = saved === 'true';
       }
@@ -85,6 +81,64 @@ export const playSound = (soundName: string, volume: number = 0.5): void => {
   }
 };
 
+export const playSoundWithControl = (soundName: string, volume: number = 0.5): HTMLAudioElement | null => {
+  if (!soundsEnabled) return null;
+  
+  try {
+    const baseUrl = (import.meta as any).env?.BASE_URL || '/';
+    const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const cleanSound = soundName.startsWith('/') ? soundName.slice(1) : soundName;
+    const soundPath = `${cleanBase}/sounds/${cleanSound}`;
+    
+    const audio = new Audio(soundPath);
+    audio.volume = Math.max(0, Math.min(1, volume));
+    
+    activeAudioElements.push(audio);
+    
+    const removeAudio = () => {
+      const index = activeAudioElements.indexOf(audio);
+      if (index > -1) {
+        activeAudioElements.splice(index, 1);
+      }
+    };
+    
+    audio.addEventListener('ended', removeAudio);
+    audio.addEventListener('error', () => {
+      removeAudio();
+      const error = audio.error;
+      if (error) {
+        let errorMsg = 'Unknown error';
+        switch (error.code) {
+          case MediaError.MEDIA_ERR_ABORTED:
+            errorMsg = 'Aborted';
+            break;
+          case MediaError.MEDIA_ERR_NETWORK:
+            errorMsg = 'Network error';
+            break;
+          case MediaError.MEDIA_ERR_DECODE:
+            errorMsg = 'Decode error';
+            break;
+          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            errorMsg = 'Format not supported or file not found';
+            break;
+        }
+        console.warn(`Failed to load sound: ${soundPath} (${errorMsg})`);
+      }
+    });
+    
+    audio.play().catch((error) => {
+      removeAudio();
+      console.warn('Failed to play sound:', error);
+      return null;
+    });
+    
+    return audio;
+  } catch (error) {
+    console.warn('Failed to create audio:', error);
+    return null;
+  }
+};
+
 export const stopAllSounds = (): void => {
   activeAudioElements.forEach(audio => {
     try {
@@ -97,24 +151,26 @@ export const stopAllSounds = (): void => {
   activeAudioElements.length = 0;
 };
 
-export const playRandomLoseSound = (): void => {
-  const randomSound = loseSounds[Math.floor(Math.random() * loseSounds.length)];
-  playSound(`lose/${randomSound}`, 0.5);
+export const playJoinSound = (): void => {
+  playSound('join/join.mp3', 0.5);
 };
 
-export const playRandomWinSound = (): void => {
-  const randomSound = winSounds[Math.floor(Math.random() * winSounds.length)];
-  playSound(`win/${randomSound}`, 0.5);
+export const playLeaveSound = (): void => {
+  playSound('leave/leave.mp3', 0.5);
 };
 
-export const playOpenCellSound = (): void => {
-  // Будет позже
+export const playLoseSound = (): void => {
+  playSound('lose/lose.mp3', 0.5);
 };
 
-export const playOpenAreaSound = (): void => {
-  // Будет позже
+export const playWinSound = (): void => {
+  playSound('win/win.mp3', 0.5);
 };
 
-export const playSecretSound = (): void => {
-  // Будет позже
+export const playTimerSound = (): void => {
+  playSound('timer/sec.mp3', 0.4);
+};
+
+export const playCellOpenSound = (): void => {
+  playSound('nextmove.mp3', 0.4);
 };

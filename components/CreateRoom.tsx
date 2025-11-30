@@ -4,7 +4,7 @@ import { NumberInput } from './NumberInput';
 import { GameConfig, GameMode, PatternId } from '../types';
 import { MAX_ROWS, MAX_COLS, MIN_ROWS, MIN_COLS } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
-import { db } from '../utils/database';
+import { settingsClient } from '../utils/settingsClient';
 import { getMultiplayerGameModes } from '../utils/gameModes';
 import { getModeNameFromTranslation } from '../utils/gameModes/i18nHelpers';
 import { getAllPatterns } from '../utils/patterns/patternHelpers';
@@ -27,12 +27,11 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onBack, onCreate }) => {
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        await db.init();
-        const saved = await db.getSetting('gameConfig');
+        const saved = await settingsClient.getSetting('gameConfig');
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            setLocalConfig({ ...parsed, gameMode: parsed.gameMode || 'classic', pattern: parsed.pattern || defaultPattern });
+            setLocalConfig({ ...parsed, gameMode: parsed.gameMode || 'classic', pattern: defaultPattern });
           } catch (e) {
             console.error('Failed to parse saved game config', e);
           }

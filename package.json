@@ -22,6 +22,7 @@
     "@prisma/client": "^6.19.0",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.4.6",
+    "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "lucide-react": "^0.554.0",
     "pg": "^8.16.3",
