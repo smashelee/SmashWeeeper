@@ -1,4 +1,4 @@
-export const GAME_VERSION = '0.0.26_1a';
+export const GAME_VERSION = '0.0.26_2a';
 export const MULTIPLAYER_UNDER_MAINTENANCE = false;
 
 export const MAX_ROWS = 16;
