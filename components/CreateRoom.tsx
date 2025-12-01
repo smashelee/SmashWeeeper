@@ -69,8 +69,8 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onBack, onCreate }) => {
 
   return (
     <div className="flex flex-col gap-3 sm:gap-5 md:gap-6 w-full">
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-2.5 sm:p-4 space-y-2 sm:space-y-3">
-        <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.modal.gameMode}</div>
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-2.5 sm:p-4 space-y-2 sm:space-y-3">
+        <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase mb-2 sm:mb-3 text-center">{t.modal.gameMode}</div>
         
         <div className="flex gap-1.5 sm:gap-3">
           {availableModes.map(({ mode, metadata }) => (
@@ -88,16 +88,16 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onBack, onCreate }) => {
           ))}
         </div>
         {showModeError && (
-          <div className="mt-2 bg-gradient-to-br from-red-500/20 to-red-600/20 border-2 border-red-500/50 rounded-lg p-2">
-            <p className="text-[10px] sm:text-xs font-pixel text-red-400 text-center">
+          <div className="mt-2 bg-gradient-to-br from-[#d84315]/20 to-[#bf360c]/20 border-2 border-[#d84315]/50 rounded-lg p-2">
+            <p className="text-[10px] sm:text-xs font-pixel text-[#ff5722] text-center">
               {t.modal.selectGameMode}
             </p>
           </div>
         )}
       </div>
 
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-2.5 sm:p-4 space-y-2 sm:space-y-3">
-        <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.modal.pattern}</div>
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-2.5 sm:p-4 space-y-2 sm:space-y-3">
+        <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase mb-2 sm:mb-3 text-center">{t.modal.pattern}</div>
         
         <div className="flex gap-1.5 sm:gap-3">
           {availablePatterns.map(({ pattern, metadata }) => (
@@ -115,14 +115,14 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onBack, onCreate }) => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-2.5 sm:p-4 space-y-2 sm:space-y-3">
-        <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.modal.fieldSettings}</div>
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-2.5 sm:p-4 space-y-2 sm:space-y-3">
+        <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase mb-2 sm:mb-3 text-center">{t.modal.fieldSettings}</div>
         
         <div className="space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-              <label className="text-xs sm:text-sm text-gray-300 font-pixel">{t.settings.rows}</label>
-              <div className="text-[10px] sm:text-xs text-gray-500 font-pixel">({MIN_ROWS}-{MAX_ROWS})</div>
+              <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel">{t.settings.rows}</label>
+              <div className="text-[10px] sm:text-xs text-[#8b6f47] font-pixel">({MIN_ROWS}-{MAX_ROWS})</div>
             </div>
             <div className="flex-shrink-0">
               <NumberInput
@@ -135,12 +135,12 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onBack, onCreate }) => {
             </div>
           </div>
 
-          <div className="h-px bg-gradient-to-r from-transparent via-[#4B5563] to-transparent"></div>
+          <div className="h-px bg-gradient-to-r from-transparent via-[#6b4423] to-transparent"></div>
 
           <div className="flex items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-              <label className="text-xs sm:text-sm text-gray-300 font-pixel">{t.settings.cols}</label>
-              <div className="text-[10px] sm:text-xs text-gray-500 font-pixel">({MIN_COLS}-{MAX_COLS})</div>
+              <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel">{t.settings.cols}</label>
+              <div className="text-[10px] sm:text-xs text-[#8b6f47] font-pixel">({MIN_COLS}-{MAX_COLS})</div>
             </div>
             <div className="flex-shrink-0">
               <NumberInput
@@ -153,12 +153,12 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onBack, onCreate }) => {
             </div>
           </div>
 
-          <div className="h-px bg-gradient-to-r from-transparent via-[#4B5563] to-transparent"></div>
+          <div className="h-px bg-gradient-to-r from-transparent via-[#6b4423] to-transparent"></div>
 
           <div className="flex items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-              <label className="text-xs sm:text-sm text-gray-300 font-pixel">{t.settings.mines}</label>
-              <div className="text-[10px] sm:text-xs text-gray-500 font-pixel">max: {Math.floor((localConfig.rows * localConfig.cols) * 0.85)}</div>
+              <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel">{t.settings.mines}</label>
+              <div className="text-[10px] sm:text-xs text-[#8b6f47] font-pixel">max: {Math.floor((localConfig.rows * localConfig.cols) * 0.85)}</div>
             </div>
             <div className="flex-shrink-0">
               <NumberInput

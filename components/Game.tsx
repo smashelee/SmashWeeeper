@@ -98,7 +98,8 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
     const handleGameStarted = (data: { players: MultiplayerPlayer[]; currentTurn: string; config: GameConfig; turnStartTime?: number; timestamp?: number }) => {
       console.log('game_started', data);
       setCells([]);
-      setStatus('playing');
+      setStatus('idle');
+      prevStatusRef.current = 'idle';
       soundPlayedRef.current = { won: false, lost: false };
       setTime(0);
       setFirstClick(true);
@@ -155,6 +156,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
         console.log('First flagged cell:', data.cells.flat().find(c => c.isFlagged && c.flaggedBy));
         setCells(data.cells);
         setStatus(data.status);
+        prevStatusRef.current = data.status;
         setTime(data.time);
         
         if (data.status === 'idle' || data.status === 'playing') {
@@ -652,10 +654,26 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
         }, 2000);
         return;
       }
+      if (status === 'idle') {
+        const toastId = Date.now().toString() + Math.random().toString();
+        setToasts(prev => [...prev, { id: toastId, message: t.game.boardNotOpened || 'Board is not opened yet!' }]);
+        setTimeout(() => {
+          setToasts(prev => prev.filter(t => t.id !== toastId));
+        }, 2000);
+        return;
+      }
       socketClient.emit('toggle_flag', { row, col });
       return;
     }
 
+    if (status === 'idle') {
+      const toastId = Date.now().toString() + Math.random().toString();
+      setToasts(prev => [...prev, { id: toastId, message: t.game.boardNotOpened || 'Board is not opened yet!' }]);
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== toastId));
+      }, 2000);
+      return;
+    }
     if (status === 'won' || status === 'lost') return;
     if (cells[row]?.[col]?.isRevealed) return;
     
@@ -705,6 +723,14 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
       socketClient.emit('request_rematch');
       return;
     }
+    if (firstClick) {
+      const toastId = Date.now().toString() + Math.random().toString();
+      setToasts(prev => [...prev, { id: toastId, message: t.game.boardNotOpened || 'Доска ещё не открыта!' }]);
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== toastId));
+      }, 2000);
+      return;
+    }
     setCells(initializeEmptyBoard());
     setStatus('idle');
     soundPlayedRef.current = { won: false, lost: false };
@@ -715,14 +741,16 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
     if (config.gameMode === 'timed') {
       setTurnStartTime(null);
     }
-  }, [initializeEmptyBoard, isMultiplayer, config.gameMode]);
+  }, [initializeEmptyBoard, isMultiplayer, config.gameMode, firstClick, t]);
 
 
   useEffect(() => {
     if (!isMultiplayer) {
-      setCells(initializeEmptyBoard());
+      const newBoard = initializeEmptyBoard();
+      setCells(newBoard);
     }
   }, [initializeEmptyBoard, isMultiplayer]);
+
   
   useEffect(() => {
     const handleResize = () => {
@@ -869,7 +897,9 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
   const [displayTime, setDisplayTime] = useState(0);
   const frozenTimeRef = React.useRef<number | null>(null);
   const soundPlayedRef = React.useRef<{ won: boolean; lost: boolean }>({ won: false, lost: false });
+  const newGameSoundPlayedRef = React.useRef<boolean>(false);
   const lastTimerSoundRef = React.useRef<number>(0);
+  const prevStatusRef = React.useRef<GameStatus>('idle');
   
   useEffect(() => {
     if (status === 'idle' && config.gameMode === 'timed') {
@@ -925,31 +955,31 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
         {toasts.map((toast, index) => (
           <div
             key={toast.id}
-            className="bg-gradient-to-br from-[#374151] to-[#1F2937] border-2 border-[#4B5563] px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-lg pointer-events-auto animate-slide-in-right flex items-center gap-2"
+            className="bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-2 border-[#4a3a27] px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-lg pointer-events-auto animate-slide-in-right flex items-center gap-2"
             style={{ 
               animationDelay: `${index * 0.05}s`
             }}
           >
-            <p className="text-[10px] sm:text-xs font-pixel text-gray-200 whitespace-nowrap">{toast.message}</p>
+            <p className="text-[10px] sm:text-xs font-pixel text-[#f4e8c1] whitespace-nowrap">{toast.message}</p>
           </div>
         ))}
       </div>
-      <div className="text-[#9CA3AF] text-[10px] sm:text-xs font-pixel drop-shadow-lg mb-2">
+      <div className="text-[#c5a572] text-[10px] sm:text-xs font-pixel drop-shadow-lg mb-2">
         {t.menu.version}: {GAME_VERSION}
       </div>
-      <div className="bg-gradient-to-br from-[#9CA3AF] to-[#6B7280] p-0.5 sm:p-1.5 rounded-2xl shadow-2xl w-full max-w-[600px] mx-auto border border-[#D1D5DB]/20">
-        <div className="bg-gradient-to-br from-[#374151] to-[#1F2937] border-2 border-[#4B5563]/50 rounded-xl p-1.5 sm:p-3 flex flex-col shadow-inner">
+      <div className="bg-gradient-to-br from-[#8b6f47] to-[#6b4423] p-0.5 sm:p-1.5 rounded-2xl shadow-2xl w-full max-w-[700px] mx-auto border border-[#a0826d]/20">
+        <div className="bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-2 border-[#4a3a27]/50 rounded-xl p-1.5 sm:p-3 flex flex-col shadow-inner">
           <div className="flex justify-center items-center gap-2 sm:gap-4 md:gap-6 mb-2 sm:mb-3 flex-wrap">
             <div className="flex flex-col items-center min-w-0">
-              <span className="text-[10px] sm:text-xs text-gray-300 mb-1 sm:mb-1.5 font-pixel uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs text-[#f4e8c1] mb-1 sm:mb-1.5 font-pixel uppercase tracking-wider">
                 {config.gameMode === 'timed' && (status === 'playing' || status === 'idle')
                   ? t.game.turnTimeLeft 
                   : t.game.time}
               </span>
-              <div className={`bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-pixel text-xs sm:text-sm md:text-base shadow-lg shadow-black/30 ${
+              <div className={`bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-pixel text-xs sm:text-sm md:text-base shadow-lg shadow-black/30 ${
                 config.gameMode === 'timed' && (status === 'playing' || status === 'idle') && turnStartTime
-                  ? (displayTime <= 5 ? 'text-red-400 border-red-500' : displayTime <= 10 ? 'text-yellow-400 border-yellow-500' : 'text-[#60A5FA] border-[#4B5563]')
-                  : 'text-[#60A5FA] border-[#4B5563]'
+                  ? (displayTime <= 5 ? 'text-[#ff5722] border-[#d84315]' : displayTime <= 10 ? 'text-[#fdd835] border-[#f9a825]' : 'text-[#9ccc65] border-[#4a3a27]')
+                  : 'text-[#9ccc65] border-[#4a3a27]'
               }`}>
                 {config.gameMode === 'timed' && (status === 'playing' || status === 'idle')
                   ? displayTime.toString().padStart(2, '0')
@@ -958,10 +988,10 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
             </div>
             
             <div className="flex flex-col items-center min-w-0">
-              <div className="text-[10px] sm:text-xs text-gray-300 mb-1 sm:mb-1.5 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+              <div className="text-[10px] sm:text-xs text-[#f4e8c1] mb-1 sm:mb-1.5 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
                 <i className={`fi fi-br-flag-alt ${flagCounterColor.icon} drop-shadow-lg text-xs sm:text-base`}></i>
               </div>
-              <div className={`bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-pixel text-xs sm:text-sm md:text-base ${flagCounterColor.text} shadow-lg shadow-black/30`}>
+              <div className={`bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-pixel text-xs sm:text-sm md:text-base ${flagCounterColor.text} shadow-lg shadow-black/30`}>
                 {Math.max(0, config.mines - flaggedCount)}
               </div>
             </div>
@@ -969,10 +999,10 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
             {isMultiplayer && currentTurn && (
               <>
                 <div className="flex flex-col items-center min-w-0 max-w-[100px] sm:max-w-[120px]">
-                  <div className="text-[10px] sm:text-xs text-gray-300 mb-1 sm:mb-1.5 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
-                    <i className="fi fi-br-circle-user text-green-400 drop-shadow-lg text-xs sm:text-base"></i>
+                  <div className="text-[10px] sm:text-xs text-[#f4e8c1] mb-1 sm:mb-1.5 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+                    <i className="fi fi-br-circle-user text-[#9ccc65] drop-shadow-lg text-xs sm:text-base"></i>
                   </div>
-                  <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-pixel text-xs sm:text-sm md:text-base text-green-400 shadow-lg shadow-black/30 truncate w-full text-center">
+                  <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-pixel text-xs sm:text-sm md:text-base text-[#9ccc65] shadow-lg shadow-black/30 truncate w-full text-center">
                     {currentTurn === playerId ? t.modal.you : (multiplayerPlayers.find(p => p.id === currentTurn)?.name || '...')}
                   </div>
                 </div>
@@ -982,7 +1012,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
 
           <div className="flex justify-center items-center relative">
             <div 
-              className="grid bg-gradient-to-br from-[#111827] to-[#1F2937] rounded-xl mx-auto border-2 border-[#374151] shadow-inner"
+              className="grid bg-gradient-to-br from-[#3a2817] to-[#2a1810] rounded-xl mx-auto border-2 border-[#4a3a27] shadow-inner"
               style={{
                 gridTemplateColumns: `repeat(${config.cols}, ${cellSize}px)`,
                 gridTemplateRows: `repeat(${config.rows}, ${cellSize}px)`,
@@ -1015,16 +1045,16 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                             cell.isRevealed
                               ? cell.isMine
                                 ? status === 'won'
-                                  ? 'bg-gradient-to-br from-green-600 to-green-800 border-green-500 text-white shadow-green-900/50'
+                                  ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-[#9ccc65] text-white shadow-[#558b2f]/50'
                                   : status === 'lost' && cell.isFlagged
-                                  ? 'bg-gradient-to-br from-green-600 to-green-800 border-green-500 text-white shadow-green-900/50'
-                                  : 'bg-gradient-to-br from-red-600 to-red-800 border-red-500 text-white shadow-red-900/50'
+                                  ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-[#9ccc65] text-white shadow-[#558b2f]/50'
+                                  : 'bg-gradient-to-br from-[#d84315] to-[#bf360c] border-[#ff5722] text-white shadow-[#bf360c]/50'
                                 : status === 'lost' && cell.isFlagged && !cell.isMine
-                                ? 'bg-gradient-to-br from-[#4B5563] to-[#374151] border-[#6B7280] text-white shadow-inner'
-                                : 'bg-gradient-to-br from-[#4B5563] to-[#374151] border-[#6B7280] text-white shadow-inner'
+                                ? 'bg-gradient-to-br from-[#6b4423] to-[#5a4a2f] border-[#8b6f47] text-white shadow-inner'
+                                : 'bg-gradient-to-br from-[#6b4423] to-[#5a4a2f] border-[#8b6f47] text-white shadow-inner'
                               : cell.isFlagged
                               ? getFlagColorClasses(cell.flaggedBy)
-                              : 'bg-gradient-to-br from-[#6B7280] to-[#4B5563] border-[#9CA3AF] hover:from-[#4B5563] hover:to-[#374151] hover:border-[#6B7280] active:from-[#374151] active:to-[#1F2937] shadow-lg shadow-black/30 hover:shadow-xl'
+                              : 'bg-gradient-to-br from-[#8b6f47] to-[#6b4423] border-[#a0826d] hover:from-[#6b4423] hover:to-[#5a4a2f] hover:border-[#8b6f47] active:from-[#5a4a2f] active:to-[#3a2817] shadow-lg shadow-black/30 hover:shadow-xl'
                           }
                         `}
                         style={{
@@ -1059,7 +1089,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                   )}
                 </>
               ) : (
-                <div className="text-gray-400 text-sm font-pixel p-4">{t.modal.loadingBoard}</div>
+                <div className="text-[#c5a572] text-sm font-pixel p-4">{t.modal.loadingBoard}</div>
               )}
             </div>
           </div>
@@ -1068,7 +1098,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
            ((windowSize.width > 0 && windowSize.width < 640) || 
             (windowSize.width === 0 && typeof window !== 'undefined' && window.innerWidth < 640)) && (
             <div
-              className="cell-action-panel fixed z-50 flex items-center gap-1.5 bg-gradient-to-br from-[#374151] to-[#1F2937] border-2 border-[#6B7280] rounded-xl p-1.5 shadow-2xl"
+              className="cell-action-panel fixed z-50 flex items-center gap-1.5 bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-2 border-[#8b6f47] rounded-xl p-1.5 shadow-2xl"
               style={(() => {
                 const panelWidth = 140;
                 const panelHeight = 50;
@@ -1101,6 +1131,20 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
               <button
                 onClick={() => {
                   if (selectedCell) {
+                    toggleFlag(selectedCell.row, selectedCell.col);
+                    setSelectedCell(null);
+                    setCellButtonPosition(null);
+                  }
+                }}
+                className={`w-10 h-10 rounded-lg bg-gradient-to-br ${(FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow).gradient} border-2 ${(FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow).border} flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
+                disabled={status === 'won' || status === 'lost' || (isMultiplayer && currentTurn !== playerId)}
+              >
+                <i className="fi fi-br-flag-alt text-white text-base"></i>
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (selectedCell) {
                     const row = selectedCell.row;
                     const col = selectedCell.col;
                     
@@ -1115,7 +1159,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
                     setCellButtonPosition(null);
                   }
                 }}
-                className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 border-2 border-blue-500 flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-2 border-[#9ccc65] flex items-center justify-center shadow-lg active:scale-90 transition-transform"
                 disabled={status === 'won' || status === 'lost' || cells[selectedCell.row]?.[selectedCell.col]?.isFlagged || (isMultiplayer && currentTurn !== playerId)}
               >
                 <i className="fi fi-br-shovel text-white text-base"></i>
@@ -1123,24 +1167,10 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
               
               <button
                 onClick={() => {
-                  if (selectedCell) {
-                    toggleFlag(selectedCell.row, selectedCell.col);
-                    setSelectedCell(null);
-                    setCellButtonPosition(null);
-                  }
-                }}
-                className={`w-10 h-10 rounded-lg bg-gradient-to-br ${(FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow).gradient} border-2 ${(FLAG_COLOR_MAP[flagColor] || FLAG_COLOR_MAP.yellow).border} flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
-                disabled={status === 'won' || status === 'lost' || (isMultiplayer && currentTurn !== playerId)}
-              >
-                <i className="fi fi-br-flag-alt text-white text-base"></i>
-              </button>
-              
-              <button
-                onClick={() => {
                   setSelectedCell(null);
                   setCellButtonPosition(null);
                 }}
-                className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-gray-500 flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#6b4423] to-[#4a2f1a] border-2 border-[#8b6f47] flex items-center justify-center shadow-lg active:scale-90 transition-transform"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -1340,7 +1370,7 @@ export const Game: React.FC<GameProps> = ({ config, onExit, isMultiplayer = fals
         showXButton={false}
       >
         <div className="text-center">
-          <p className="mb-4 text-[10px] sm:text-sm text-gray-300">{t.modal.exitConfirmText}</p>
+          <p className="mb-4 text-[10px] sm:text-sm text-[#f4e8c1]">{t.modal.exitConfirmText}</p>
           <div className="flex gap-2 sm:gap-3 justify-center flex-wrap">
             <PixelButton 
               onClick={(e) => {

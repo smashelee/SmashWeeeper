@@ -46,7 +46,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     <div className="flex flex-col gap-4 sm:gap-5 w-full">
       <div className="space-y-3 sm:space-y-4">
         <div className="flex flex-col gap-2">
-          <label className="text-xs sm:text-sm text-gray-300 font-pixel">{t.auth.username || 'Username'}</label>
+          <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel">{t.auth.username || 'Username'}</label>
           <input
             type="text"
             value={username}
@@ -54,19 +54,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
               const filtered = filterLatinInput(e.target.value);
               setUsername(filtered);
             }}
-            className="w-full bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-gray-200 focus:outline-none focus:border-[#6366F1]"
+            className="w-full bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-[#f4e8c1] placeholder:text-[#9ccc65] focus:outline-none focus:border-[#7cb342]"
             placeholder={t.auth.username || 'Username'}
             disabled={loading}
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs sm:text-sm text-gray-300 font-pixel">{t.auth.password || 'Password'}</label>
+          <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel">{t.auth.password || 'Password'}</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-gray-200 focus:outline-none focus:border-[#6366F1]"
+            className="w-full bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-[#f4e8c1] placeholder:text-[#9ccc65] focus:outline-none focus:border-[#7cb342]"
             placeholder={t.auth.password || 'Password'}
             disabled={loading}
             onKeyDown={(e) => {
@@ -78,8 +78,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
         </div>
 
         {error && (
-          <div className="bg-gradient-to-br from-red-500/20 to-red-600/20 border-2 border-red-500/50 rounded-lg p-2">
-            <p className="text-[10px] sm:text-xs font-pixel text-red-400 text-center">{error}</p>
+          <div className="bg-gradient-to-br from-[#d84315]/20 to-[#bf360c]/20 border-2 border-[#d84315]/50 rounded-lg p-2">
+            <p className="text-[10px] sm:text-xs font-pixel text-[#ff5722] text-center">{error}</p>
           </div>
         )}
       </div>

@@ -41,7 +41,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         type="button"
         onClick={handleDecrement}
         disabled={min !== undefined && value <= min}
-        className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 disabled:from-gray-800 disabled:to-gray-900 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-gray-600 rounded-lg text-gray-200 transition-all duration-150 active:scale-90 flex-shrink-0 shadow-lg shadow-black/30"
+        className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center bg-gradient-to-br from-[#3a2817] to-[#2a1810] hover:from-[#2a1810] hover:to-[#1a0f08] disabled:opacity-50 disabled:cursor-not-allowed border-2 border-[#4a3a27] rounded-lg text-[#f4e8c1] transition-all duration-150 active:scale-90 flex-shrink-0 shadow-inner"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M2 6L10 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -54,13 +54,13 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         onChange={handleInputChange}
         min={min}
         max={max}
-        className="w-14 sm:w-16 md:w-20 bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] p-1 sm:p-1.5 sm:p-2 text-center focus:outline-none focus:border-[#6366F1] font-pixel text-[#D1D5DB] rounded-lg text-[10px] sm:text-xs md:text-sm shadow-inner"
+        className="w-14 sm:w-16 md:w-20 bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] p-1 sm:p-1.5 sm:p-2 text-center focus:outline-none focus:border-[#7cb342] font-pixel text-[#f4e8c1] rounded-lg text-[10px] sm:text-xs md:text-sm shadow-inner"
       />
       <button
         type="button"
         onClick={handleIncrement}
         disabled={max !== undefined && value >= max}
-        className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 disabled:from-gray-800 disabled:to-gray-900 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-gray-600 rounded-lg text-gray-200 transition-all duration-150 active:scale-90 flex-shrink-0 shadow-lg shadow-black/30"
+        className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center bg-gradient-to-br from-[#3a2817] to-[#2a1810] hover:from-[#2a1810] hover:to-[#1a0f08] disabled:opacity-50 disabled:cursor-not-allowed border-2 border-[#4a3a27] rounded-lg text-[#f4e8c1] transition-all duration-150 active:scale-90 flex-shrink-0 shadow-inner"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M6 2L6 10M2 6L10 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>

@@ -43,6 +43,7 @@ const App: React.FC = () => {
   const [showRematchLobby, setShowRematchLobby] = useState(false);
   const [showGameModeSelect, setShowGameModeSelect] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -91,13 +92,40 @@ const App: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to load data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
     loadData();
   }, [isAuthenticated, user, authLoading]);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    let currentProgress = 0;
+    const animate = () => {
+      if (currentProgress >= 100) {
+        setProgress(100);
+        setTimeout(() => {
+          setLoading(false);
+        }, 200);
+        return;
+      }
+
+      const speedVariation = Math.random() * 2 + 0.5;
+      currentProgress += speedVariation;
+      
+      if (currentProgress > 100) {
+        currentProgress = 100;
+      }
+
+      setProgress(currentProgress);
+
+      const delay = Math.random() > 0.7 ? Math.random() * 150 + 50 : Math.random() * 50 + 20;
+      setTimeout(animate, delay);
+    };
+
+    animate();
+  }, [authLoading]);
 
   useEffect(() => {
     const connect = async () => {
@@ -239,14 +267,14 @@ const App: React.FC = () => {
 
   const backgroundDots = useMemo(() => {
     const colors = [
-      { hex: '#3B82F6' },
-      { hex: '#A855F7' },
-      { hex: '#EC4899' },
-      { hex: '#06B6D4' },
-      { hex: '#6366F1' },
-      { hex: '#8B5CF6' },
-      { hex: '#10B981' },
-      { hex: '#14B8A6' },
+      { hex: '#7cb342' },
+      { hex: '#9ccc65' },
+      { hex: '#8bc34a' },
+      { hex: '#689f38' },
+      { hex: '#558b2f' },
+      { hex: '#aed581' },
+      { hex: '#c5e1a5' },
+      { hex: '#dce775' },
     ];
     
     const dot1 = {
@@ -270,16 +298,30 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
-        <div>Loading...</div>
+      <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}>
+        <div className="bg-gradient-to-br from-[#8b6f47] to-[#6b4423] p-1 sm:p-1.5 rounded-2xl shadow-2xl border border-[#a0826d]/20 w-full max-w-[280px] sm:max-w-[320px]">
+          <div className="flex flex-col space-y-4 w-full p-6 bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-2 border-[#6b4423]/50 rounded-xl shadow-inner">
+            <div className="text-[#F6EBCB] text-lg sm:text-xl font-pixel text-center">
+              Loading...
+            </div>
+            <div className="w-full bg-[#3a2817] border-2 border-[#6b4423] rounded-full overflow-hidden" style={{ height: '24px' }}>
+              <div 
+                className="h-full bg-gradient-to-r from-[#7cb342] to-[#558b2f] rounded-full transition-all duration-300 ease-out"
+                style={{
+                  width: `${progress}%`
+                }}
+              ></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div 
-      className="flex flex-col items-center bg-gray-900 text-white relative overflow-x-hidden"
-      style={{ height: '100vh' }}
+      className="flex flex-col items-center text-white relative overflow-x-hidden"
+      style={{ height: '100vh', position: 'relative', zIndex: 1 }}
     >
       <div 
         className="absolute blur-xl pointer-events-none rounded-full"
@@ -333,6 +375,7 @@ const App: React.FC = () => {
 
         {screen === AppScreen.GAME && (
           <Game 
+            key={`${config.rows}-${config.cols}-${config.mines}-${config.gameMode}-${config.pattern}`}
             config={config} 
             onExit={() => {
               if (isMultiplayer) {
@@ -459,7 +502,7 @@ const App: React.FC = () => {
 
 
       <div className="fixed bottom-4 right-4 z-20">
-        <div className="text-[#9CA3AF] text-xs font-pixel drop-shadow-lg">
+        <div className="text-[#c5a572] text-xs font-pixel drop-shadow-lg">
           ID: {playerId}
         </div>
       </div>

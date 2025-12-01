@@ -21,8 +21,8 @@ export const Toast: React.FC<ToastProps> = ({ message, isVisible, onClose, durat
 
   return (
     <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
-      <div className="bg-gradient-to-br from-[#374151] to-[#1F2937] border-2 border-[#4B5563] px-6 py-3 rounded-lg shadow-2xl">
-        <p className="text-sm font-pixel text-gray-200 text-center">{message}</p>
+      <div className="bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-2 border-[#4a3a27] px-6 py-3 rounded-lg shadow-2xl">
+        <p className="text-sm font-pixel text-[#f4e8c1] text-center">{message}</p>
       </div>
     </div>
   );

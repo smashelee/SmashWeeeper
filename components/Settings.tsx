@@ -52,9 +52,9 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
   const [toastMessage, setToastMessage] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showEasterEggModal, setShowEasterEggModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [winSoundEnabled, setWinSoundEnabled] = useState(true);
-  const [loseSoundEnabled, setLoseSoundEnabled] = useState(true);
+  const [localSounds, setLocalSounds] = useState({ victory: true, defeat: true });
   const prevConfigRef = React.useRef<string>('');
 
   useEffect(() => {
@@ -77,22 +77,15 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
             const parsed = JSON.parse(savedConfig);
             setLocalConfig(parsed);
             prevConfigRef.current = savedConfig;
+            if (parsed.sounds) {
+              setLocalSounds({
+                victory: parsed.sounds.victory !== false,
+                defeat: parsed.sounds.defeat !== false
+              });
+            }
           } catch (e) {
             console.error('Failed to parse saved game config', e);
           }
-        }
-        
-        try {
-          const savedWinSound = localStorage.getItem('winSoundEnabled');
-          if (savedWinSound !== null) {
-            setWinSoundEnabled(savedWinSound === 'true');
-          }
-          const savedLoseSound = localStorage.getItem('loseSoundEnabled');
-          if (savedLoseSound !== null) {
-            setLoseSoundEnabled(savedLoseSound === 'true');
-          }
-        } catch (error) {
-          console.error('Failed to load sounds settings:', error);
         }
         
         try {
@@ -133,11 +126,12 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
     const maxMines = Math.floor((rows * cols) * 0.85);
     mines = Math.max(1, Math.min(maxMines, mines));
 
-    const validatedConfig = { ...localConfig, rows, cols, mines };
+    const validatedConfig = { ...localConfig, rows, cols, mines, sounds: localSounds };
     
     try {
       localStorage.setItem('gameConfig', JSON.stringify(validatedConfig));
       prevConfigRef.current = JSON.stringify(validatedConfig);
+      window.dispatchEvent(new CustomEvent('soundsChanged', { detail: localSounds }));
     } catch (error) {
       console.error('Failed to save game config:', error);
     }
@@ -191,27 +185,28 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
           setToastMessage('');
         }}
       />
-      <div className="bg-gradient-to-br from-[#9CA3AF] to-[#6B7280] p-1 sm:p-1.5 rounded-2xl shadow-2xl w-full max-w-xl mx-2 sm:mx-0 overflow-hidden border border-[#D1D5DB]/20">
-        <div className="flex flex-col items-center w-full p-2.5 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-[#374151] to-[#1F2937] border-2 border-[#4B5563]/50 rounded-xl shadow-inner">
-        <h2 className="text-lg sm:text-xl md:text-2xl mb-4 sm:mb-5 md:mb-6 text-[#D1D5DB] text-center font-pixel uppercase tracking-wider px-2">{t.settings.title}</h2>
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-md p-1.5 sm:p-4">
+        <div className="bg-gradient-to-br from-[#8b6f47] to-[#6b4423] p-1 sm:p-1.5 rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-[#a0826d]/20">
+        <div className="flex flex-col items-center w-full p-2.5 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-2 border-[#4a3a27]/50 rounded-xl shadow-inner">
+        <h2 className="text-lg sm:text-xl md:text-2xl mb-4 sm:mb-5 md:mb-6 text-[#f4e8c1] text-center font-pixel uppercase tracking-wider px-2">{t.settings.title}</h2>
 
         <div className="flex gap-1.5 sm:gap-2 mb-4 sm:mb-5 md:mb-6 w-full">
           <button
             onClick={() => setActiveTab('game')}
-            className={`flex-1 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg font-pixel text-[10px] sm:text-xs md:text-sm transition-all duration-150 ${
+            className={`flex-1 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg font-pixel text-[10px] sm:text-xs md:text-sm transition-all duration-150 border-2 active:scale-95 shadow-lg ${
               activeTab === 'game'
-                ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50 text-white'
-                : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600 text-gray-200'
+                ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-[#9ccc65] text-white hover:from-[#558b2f] hover:to-[#33691e] shadow-[#7cb342]/30'
+                : 'bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-[#6d5a3f] text-[#f4e8c1] hover:from-[#3a2817] hover:to-[#2a1810] shadow-black/30'
             }`}
           >
             {t.settings.game}
           </button>
           <button
             onClick={() => setActiveTab('multiplayer')}
-            className={`flex-1 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg font-pixel text-[10px] sm:text-xs md:text-sm transition-all duration-150 ${
+            className={`flex-1 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg font-pixel text-[10px] sm:text-xs md:text-sm transition-all duration-150 border-2 active:scale-95 shadow-lg ${
               activeTab === 'multiplayer'
-                ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50 text-white'
-                : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600 text-gray-200'
+                ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-[#9ccc65] text-white hover:from-[#558b2f] hover:to-[#33691e] shadow-[#7cb342]/30'
+                : 'bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-[#6d5a3f] text-[#f4e8c1] hover:from-[#3a2817] hover:to-[#2a1810] shadow-black/30'
             }`}
           >
             {t.settings.multiplayer}
@@ -220,14 +215,14 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
 
         {activeTab === 'game' && (
           <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 w-full">
-            <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
-              <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.modal.fieldSettings}</div>
+            <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase mb-2 sm:mb-3 text-center">{t.modal.fieldSettings}</div>
               
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                    <label className="text-xs sm:text-sm text-gray-300 font-pixel">{t.settings.rows}</label>
-                    <div className="text-[10px] sm:text-xs text-gray-500 font-pixel">({MIN_ROWS}-{MAX_ROWS})</div>
+                    <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel">{t.settings.rows}</label>
+                    <div className="text-[10px] sm:text-xs text-[#8b6f47] font-pixel">({MIN_ROWS}-{MAX_ROWS})</div>
                   </div>
                   <div className="flex-shrink-0">
                     <NumberInput
@@ -240,12 +235,12 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   </div>
                 </div>
 
-                <div className="h-px bg-gradient-to-r from-transparent via-[#4B5563] to-transparent"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-[#6b4423] to-transparent"></div>
 
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                    <label className="text-xs sm:text-sm text-gray-300 font-pixel">{t.settings.cols}</label>
-                    <div className="text-[10px] sm:text-xs text-gray-500 font-pixel">({MIN_COLS}-{MAX_COLS})</div>
+                    <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel">{t.settings.cols}</label>
+                    <div className="text-[10px] sm:text-xs text-[#8b6f47] font-pixel">({MIN_COLS}-{MAX_COLS})</div>
                   </div>
                   <div className="flex-shrink-0">
                     <NumberInput
@@ -258,12 +253,12 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   </div>
                 </div>
 
-                <div className="h-px bg-gradient-to-r from-transparent via-[#4B5563] to-transparent"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-[#6b4423] to-transparent"></div>
 
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                    <label className="text-xs sm:text-sm text-gray-300 font-pixel">{t.settings.mines}</label>
-                    <div className="text-[10px] sm:text-xs text-gray-500 font-pixel">max: {Math.floor((localConfig.rows * localConfig.cols) * 0.85)}</div>
+                    <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel">{t.settings.mines}</label>
+                    <div className="text-[10px] sm:text-xs text-[#8b6f47] font-pixel">max: {Math.floor((localConfig.rows * localConfig.cols) * 0.85)}</div>
                   </div>
                   <div className="flex-shrink-0">
                     <NumberInput
@@ -278,15 +273,15 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-xl p-3 sm:p-4">
-              <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.settings.language}</div>
+            <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-xl p-3 sm:p-4">
+              <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase mb-2 sm:mb-3 text-center">{t.settings.language}</div>
               <div className="flex gap-1.5 sm:gap-2 justify-center">
                 <button 
                   onClick={() => setLocalLanguage('en')} 
                   className={`px-2 sm:px-3 py-1.5 sm:py-2 md:py-2.5 rounded-lg shadow-lg transition-all duration-150 min-w-[50px] sm:min-w-[60px] flex items-center justify-center ${
                     localLanguage === 'en' 
-                      ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50' 
-                      : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600'
+                      ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-2 border-[#9ccc65] shadow-[#7cb342]/50' 
+                      : 'bg-gradient-to-br from-[#6b4423] to-[#4a2f1a] hover:from-[#8b6f47] hover:to-[#6b4423] border-2 border-[#4a3a27]'
                   }`}
                   title="English"
                 >
@@ -296,8 +291,8 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   onClick={() => setLocalLanguage('ru')} 
                   className={`px-2 sm:px-3 py-1.5 sm:py-2 md:py-2.5 rounded-lg shadow-lg transition-all duration-150 min-w-[50px] sm:min-w-[60px] flex items-center justify-center ${
                     localLanguage === 'ru' 
-                      ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50' 
-                      : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600'
+                      ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-2 border-[#9ccc65] shadow-[#7cb342]/50' 
+                      : 'bg-gradient-to-br from-[#6b4423] to-[#4a2f1a] hover:from-[#8b6f47] hover:to-[#6b4423] border-2 border-[#4a3a27]'
                   }`}
                   title="Русский"
                 >
@@ -307,8 +302,8 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   onClick={() => setLocalLanguage('ua')} 
                   className={`px-2 sm:px-3 py-1.5 sm:py-2 md:py-2.5 rounded-lg shadow-lg transition-all duration-150 min-w-[50px] sm:min-w-[60px] flex items-center justify-center ${
                     localLanguage === 'ua' 
-                      ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50' 
-                      : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600'
+                      ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-2 border-[#9ccc65] shadow-[#7cb342]/50' 
+                      : 'bg-gradient-to-br from-[#6b4423] to-[#4a2f1a] hover:from-[#8b6f47] hover:to-[#6b4423] border-2 border-[#4a3a27]'
                   }`}
                   title="Українська"
                 >
@@ -318,8 +313,8 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   onClick={() => setLocalLanguage('pl')} 
                   className={`px-2 sm:px-3 py-1.5 sm:py-2 md:py-2.5 rounded-lg shadow-lg transition-all duration-150 min-w-[50px] sm:min-w-[60px] flex items-center justify-center ${
                     localLanguage === 'pl' 
-                      ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-2 border-[#6366F1] shadow-[#4F46E5]/50' 
-                      : 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border-2 border-gray-600'
+                      ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-2 border-[#9ccc65] shadow-[#7cb342]/50' 
+                      : 'bg-gradient-to-br from-[#6b4423] to-[#4a2f1a] hover:from-[#8b6f47] hover:to-[#6b4423] border-2 border-[#4a3a27]'
                   }`}
                   title="Polski"
                 >
@@ -328,64 +323,46 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
-              <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.settings.sounds}</div>
+            <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase mb-2 sm:mb-3 text-center">{t.settings.sounds}</div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
-                  <label className="text-xs sm:text-sm text-gray-300 font-pixel flex-1 min-w-0">
+                  <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel flex-1 min-w-0">
                     {t.settings.victory || 'Victory'}
                   </label>
                   <button
-                    onClick={async () => {
-                      const newValue = !winSoundEnabled;
-                      setWinSoundEnabled(newValue);
-                      try {
-                        localStorage.setItem('winSoundEnabled', newValue.toString());
-                        window.dispatchEvent(new CustomEvent('winSoundEnabledChanged', { detail: newValue }));
-                        const { setWinSoundEnabled: updateWinSoundEnabled } = await import('../utils/sounds');
-                        updateWinSoundEnabled(newValue);
-                      } catch (error) {
-                        console.error('Failed to save win sound setting:', error);
-                      }
+                    onClick={() => {
+                      setLocalSounds(prev => ({ ...prev, victory: !prev.victory }));
                     }}
                     className={`flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg border-2 transition-all duration-150 ${
-                      winSoundEnabled
-                        ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1] shadow-[#4F46E5]/50'
-                        : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 hover:from-gray-600 hover:to-gray-700'
+                      localSounds.victory
+                        ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-[#9ccc65] shadow-[#7cb342]/50'
+                        : 'bg-gradient-to-br from-[#6b4423] to-[#4a2f1a] border-[#4a3a27] hover:from-[#8b6f47] hover:to-[#6b4423]'
                     }`}
                   >
-                    {winSoundEnabled && (
+                    {localSounds.victory && (
                       <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
                   </button>
                 </div>
-                <div className="h-px bg-gradient-to-r from-transparent via-[#4B5563] to-transparent"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-[#6b4423] to-transparent"></div>
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
-                  <label className="text-xs sm:text-sm text-gray-300 font-pixel flex-1 min-w-0">
+                  <label className="text-xs sm:text-sm text-[#f4e8c1] font-pixel flex-1 min-w-0">
                     {t.settings.defeat || 'Defeat'}
                   </label>
                   <button
-                    onClick={async () => {
-                      const newValue = !loseSoundEnabled;
-                      setLoseSoundEnabled(newValue);
-                      try {
-                        localStorage.setItem('loseSoundEnabled', newValue.toString());
-                        window.dispatchEvent(new CustomEvent('loseSoundEnabledChanged', { detail: newValue }));
-                        const { setLoseSoundEnabled: updateLoseSoundEnabled } = await import('../utils/sounds');
-                        updateLoseSoundEnabled(newValue);
-                      } catch (error) {
-                        console.error('Failed to save lose sound setting:', error);
-                      }
+                    onClick={() => {
+                      setLocalSounds(prev => ({ ...prev, defeat: !prev.defeat }));
                     }}
                     className={`flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg border-2 transition-all duration-150 ${
-                      loseSoundEnabled
-                        ? 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA] border-[#6366F1] shadow-[#4F46E5]/50'
-                        : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 hover:from-gray-600 hover:to-gray-700'
+                      localSounds.defeat
+                        ? 'bg-gradient-to-br from-[#7cb342] to-[#558b2f] border-[#9ccc65] shadow-[#7cb342]/50'
+                        : 'bg-gradient-to-br from-[#6b4423] to-[#4a2f1a] border-[#4a3a27] hover:from-[#8b6f47] hover:to-[#6b4423]'
                     }`}
                   >
-                    {loseSoundEnabled && (
+                    {localSounds.defeat && (
                       <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -411,12 +388,12 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
             {!isAuthenticated ? (
               <div className="w-full space-y-4 sm:space-y-5 md:space-y-6 mb-4 sm:mb-5 md:mb-6">
                 <div className="flex flex-col gap-2 sm:gap-3">
-                  <label className="text-xs sm:text-sm text-gray-300 text-center sm:text-left">{t.settings.playerName}</label>
+                  <label className="text-xs sm:text-sm text-[#f4e8c1] text-center sm:text-left">{t.settings.playerName}</label>
                   <input
                     type="text"
                     value={playerName}
                     disabled
-                    className="w-full bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-gray-400 cursor-not-allowed opacity-60"
+                    className="w-full bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-[#c5a572] cursor-not-allowed opacity-60"
                     placeholder={t.settings.playerName}
                   />
                 </div>
@@ -440,32 +417,38 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
             ) : (
               <div className="w-full space-y-4 sm:space-y-5 md:space-y-6 mb-4 sm:mb-5 md:mb-6">
                 <div className="flex flex-col gap-2 sm:gap-3">
-                  <label className="text-xs sm:text-sm text-gray-300 text-center sm:text-left">{t.settings.playerName}</label>
+                  <label className="text-xs sm:text-sm text-[#f4e8c1] text-center sm:text-left">{t.settings.playerName}</label>
                   <input
                     type="text"
                     value={playerName}
                     disabled
-                    className="w-full bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-gray-400 cursor-not-allowed opacity-60"
+                    className="w-full bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-pixel text-xs sm:text-sm text-[#c5a572] cursor-not-allowed opacity-60"
                     placeholder={t.settings.playerName}
                   />
                   {isAuthenticated && (
-                    <div className="text-[10px] sm:text-xs text-gray-500 text-center">
+                    <div className="text-[10px] sm:text-xs text-[#8b6f47] text-center">
                       {t.settings.nameCannotBeChanged}
                     </div>
                   )}
                 </div>
 
-                <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
-                  <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase mb-2 sm:mb-3 text-center">{t.settings.flagColor}</div>
+                <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
+                  <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase mb-2 sm:mb-3 text-center">{t.settings.flagColor}</div>
                   <div className="space-y-2 sm:space-y-3 max-h-64 overflow-y-auto scrollbar-hide">
                     {FLAG_COLORS.map((color, index) => (
                       <React.Fragment key={color.value}>
                         <div className="flex items-center justify-between gap-2 sm:gap-3">
                           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${color.gradient} border-2 ${color.border} flex items-center justify-center flex-shrink-0`}>
+                            <div 
+                              onClick={color.value === 'lime' ? () => setShowEasterEggModal(true) : undefined}
+                              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${color.gradient} border-2 ${color.border} flex items-center justify-center flex-shrink-0`}
+                            >
                               <i className="fi fi-br-flag-alt text-white text-xs sm:text-sm"></i>
                             </div>
-                            <label className="text-xs sm:text-sm text-gray-300 font-pixel flex-1 min-w-0">
+                            <label 
+                              onClick={color.value === 'lime' ? () => setShowEasterEggModal(true) : undefined}
+                              className="text-xs sm:text-sm text-[#f4e8c1] font-pixel flex-1 min-w-0"
+                            >
                               {t.settings.colors[color.value as 'yellow' | 'red' | 'blue' | 'green' | 'purple' | 'pink' | 'orange' | 'cyan' | 'indigo' | 'teal' | 'emerald' | 'lime' | 'amber' | 'rose' | 'sky' | 'violet' | 'fuchsia']}
                             </label>
                           </div>
@@ -474,7 +457,7 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                             className={`flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg border-2 transition-all duration-150 ${
                               flagColor === color.value
                                 ? `bg-gradient-to-br ${color.gradient} ${color.border} ${color.shadow}`
-                                : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 hover:from-gray-600 hover:to-gray-700'
+                                : 'bg-gradient-to-br from-[#6b4423] to-[#4a2f1a] border-[#4a3a27] hover:from-[#8b6f47] hover:to-[#6b4423]'
                             }`}
                           >
                             {flagColor === color.value && (
@@ -485,7 +468,7 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                           </button>
                         </div>
                         {index < FLAG_COLORS.length - 1 && (
-                          <div className="h-px bg-gradient-to-r from-transparent via-[#4B5563] to-transparent"></div>
+                          <div className="h-px bg-gradient-to-r from-transparent via-[#6b4423] to-transparent"></div>
                         )}
                       </React.Fragment>
                     ))}
@@ -494,8 +477,8 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
               </div>
             )}
 
-            <div className="flex gap-2 sm:gap-3 md:gap-4 w-full px-0.5 sm:px-0">
-              <PixelButton onClick={onBack} variant="secondary" className="flex-1 flex justify-center items-center gap-2 shadow-lg text-[10px] sm:text-xs px-2 sm:px-3 py-2 sm:py-2.5 min-w-0">
+            <div className="flex flex-nowrap gap-1.5 sm:gap-2 md:gap-3 w-full px-0.5 sm:px-0">
+              <PixelButton onClick={onBack} variant="secondary" className="flex-1 flex justify-center items-center gap-2 shadow-lg text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 min-w-0">
                 {t.settings.back}
               </PixelButton>
               {isAuthenticated ? (
@@ -503,11 +486,11 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                   <PixelButton 
                     onClick={handleLogout} 
                     variant="secondary"
-                    className="flex-1 shadow-lg text-[10px] sm:text-xs px-2 sm:px-3 py-2 sm:py-2.5 min-w-0"
+                    className="flex-1 shadow-lg text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 min-w-0"
                   >
                     {t.auth.logout}
                   </PixelButton>
-                  <PixelButton onClick={handleSaveMultiplayer} className="flex-1 shadow-lg text-[9px] sm:text-[10px] px-2 sm:px-3 py-2 sm:py-2.5 min-w-0">
+                  <PixelButton onClick={handleSaveMultiplayer} className="flex-1 shadow-lg text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 min-w-0">
                     {t.settings.save}
                   </PixelButton>
                 </>
@@ -539,9 +522,23 @@ export const Settings: React.FC<SettingsProps> = ({ config, onSave, onBack }) =>
                 onSuccess={handleAuthSuccess}
               />
             </Modal>
+
+            <Modal
+              isOpen={showEasterEggModal}
+              onClose={() => setShowEasterEggModal(false)}
+              title="BlabBlalb 🧠👴"
+              showXButton={false}
+              showCloseButton={true}
+            >
+              <div className="text-center">
+                <p className="mb-4 text-2xl sm:text-3xl md:text-4xl">Blallbla 👴</p>
+                <p className="text-sm text-[#c5a572] mb-6">Blaalblal 💚👴🧠</p>
+              </div>
+            </Modal>
           </>
         )}
         </div>
+      </div>
       </div>
     </>
   );

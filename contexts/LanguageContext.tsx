@@ -13,7 +13,6 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { loading: authLoading } = useAuth();
   const [language, setLanguageState] = useState<Language>('en');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
@@ -25,8 +24,6 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     } catch (error) {
       console.error('Failed to load language:', error);
-    } finally {
-      setLoading(false);
     }
   }, [authLoading]);
 
@@ -35,10 +32,6 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const t = getTranslation(language);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

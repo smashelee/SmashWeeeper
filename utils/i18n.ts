@@ -67,6 +67,7 @@ export const translations = {
       timeOutTextMultiplayer: '{name} didn\'t make a move in time :(',
       turnTimeOut: 'Turn time out!',
       turnTimeLeft: 'Timer',
+      boardNotOpened: 'Board is not opened yet!',
     },
     modal: {
       multiplayer: 'Online',
@@ -211,6 +212,7 @@ export const translations = {
       timeOutTextMultiplayer: '{name} не успел сделать ход :(',
       turnTimeOut: 'Время хода вышло!',
       turnTimeLeft: 'Таймер',
+      boardNotOpened: 'Доска ещё не открыта!',
     },
     modal: {
       multiplayer: 'Онлайн',
@@ -355,6 +357,7 @@ export const translations = {
       timeOutTextMultiplayer: '{name} не встиг зробити хід :(',
       turnTimeOut: 'Час ходу вийшов!',
       turnTimeLeft: 'Таймер',
+      boardNotOpened: 'Дошка ще не відкрита!',
     },
     modal: {
       multiplayer: 'Онлайн',
@@ -499,6 +502,7 @@ export const translations = {
       timeOutTextMultiplayer: '{name} nie zdążył wykonać ruchu :(',
       turnTimeOut: 'Czas tury się skończył!',
       turnTimeLeft: 'Tajmer',
+      boardNotOpened: 'Plansza jeszcze nie jest otwarta!',
     },
     modal: {
       multiplayer: 'Online',

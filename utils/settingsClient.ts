@@ -1,3 +1,5 @@
+import { encryptUserId, decryptUserId } from './userIdEncryption';
+
 const getApiUrl = (): string => {
   if (typeof window !== 'undefined' && (window as any).__API_URL__) {
     return (window as any).__API_URL__;
@@ -25,9 +27,9 @@ if (typeof window !== 'undefined') {
   try {
     const saved = localStorage.getItem('userId');
     if (saved) {
-      const userId = parseInt(saved, 10);
-      if (!isNaN(userId)) {
-        currentUserId = userId;
+      const decrypted = decryptUserId(saved);
+      if (decrypted !== null) {
+        currentUserId = decrypted;
       }
     }
   } catch (error) {
@@ -41,7 +43,8 @@ export const setUserId = (userId: number | null): void => {
   if (typeof window !== 'undefined') {
     try {
       if (userId !== null) {
-        localStorage.setItem('userId', userId.toString());
+        const encrypted = encryptUserId(userId);
+        localStorage.setItem('userId', encrypted);
       } else {
         localStorage.removeItem('userId');
       }

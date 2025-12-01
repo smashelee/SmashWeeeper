@@ -21,9 +21,9 @@
             },
             colors: {
               pixel: {
-                dark: '#111827',
-                light: '#374151',
-                accent: '#8b5cf6',
+                dark: '#3a2817',
+                light: '#5a4a2f',
+                accent: '#7cb342',
               }
             },
             boxShadow: {
@@ -37,28 +37,58 @@
     </script>
     <style>
       body {
-        background-color: #1a1e23;
-        color: #e5e7eb;
+        background: #233C20;
+        color: #F6EBCB;
         font-family: 'Press Start 2P', cursive;
         image-rendering: pixelated;
-        background-image: 
-          radial-gradient(#252a30 15%, transparent 16%),
-          radial-gradient(#252a30 15%, transparent 16%);
-        background-size: 20px 20px;
-        background-position: 0 0, 10px 10px;
+        position: relative;
+        box-shadow: inset 0 0 200px rgba(60, 100, 200, 0.25);
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(ellipse 400px 300px at 10% 20%, rgba(30, 60, 200, 0.3) 0%, transparent 50%),
+          radial-gradient(ellipse 350px 400px at 90% 15%, rgba(40, 70, 210, 0.25) 0%, transparent 50%),
+          radial-gradient(ellipse 500px 350px at 25% 80%, rgba(35, 65, 190, 0.2) 0%, transparent 50%),
+          radial-gradient(ellipse 300px 300px at 75% 85%, rgba(45, 75, 220, 0.22) 0%, transparent 50%),
+          radial-gradient(ellipse 450px 250px at 50% 50%, rgba(38, 68, 205, 0.15) 0%, transparent 50%);
+        filter: blur(50px);
+        pointer-events: none;
+        z-index: 0;
+      }
+      body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(circle 200px at 35% 30%, rgba(50, 80, 230, 0.18) 0%, transparent 50%),
+          radial-gradient(circle 250px at 65% 70%, rgba(42, 72, 215, 0.15) 0%, transparent 50%),
+          radial-gradient(circle 180px at 15% 60%, rgba(55, 85, 240, 0.12) 0%, transparent 50%),
+          radial-gradient(circle 220px at 85% 40%, rgba(35, 65, 195, 0.14) 0%, transparent 50%);
+        filter: blur(35px);
+        pointer-events: none;
+        z-index: 0;
       }
       ::-webkit-scrollbar {
         width: 12px;
       }
       ::-webkit-scrollbar-track {
-        background: #111827; 
+        background: #3a2817; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #4b5563; 
-        border: 2px solid #111827;
+        background: #6b4423; 
+        border: 2px solid #3a2817;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #6b7280; 
+        background: #8b5a2b; 
       }
       input[type="number"]::-webkit-inner-spin-button,
       input[type="number"]::-webkit-outer-spin-button {
@@ -183,6 +213,44 @@
         animation: rainbow-bg 8s ease-in-out infinite, rainbow-border 8s ease-in-out infinite;
       }
     </style>
+    <script>
+      const randomPositions = () => {
+        const r = () => Math.floor(Math.random() * 100);
+        const s = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        
+        const beforeGradients = [
+          `radial-gradient(ellipse ${s(350, 450)}px ${s(250, 350)}px at ${r()}% ${r()}%, rgba(30, 60, 200, 0.3) 0%, transparent 50%)`,
+          `radial-gradient(ellipse ${s(300, 400)}px ${s(350, 450)}px at ${r()}% ${r()}%, rgba(40, 70, 210, 0.25) 0%, transparent 50%)`,
+          `radial-gradient(ellipse ${s(450, 550)}px ${s(300, 400)}px at ${r()}% ${r()}%, rgba(35, 65, 190, 0.2) 0%, transparent 50%)`,
+          `radial-gradient(ellipse ${s(250, 350)}px ${s(250, 350)}px at ${r()}% ${r()}%, rgba(45, 75, 220, 0.22) 0%, transparent 50%)`,
+          `radial-gradient(ellipse ${s(400, 500)}px ${s(200, 300)}px at ${r()}% ${r()}%, rgba(38, 68, 205, 0.15) 0%, transparent 50%)`
+        ];
+        
+        const afterGradients = [
+          `radial-gradient(circle ${s(180, 220)}px at ${r()}% ${r()}%, rgba(50, 80, 230, 0.18) 0%, transparent 50%)`,
+          `radial-gradient(circle ${s(230, 270)}px at ${r()}% ${r()}%, rgba(42, 72, 215, 0.15) 0%, transparent 50%)`,
+          `radial-gradient(circle ${s(160, 200)}px at ${r()}% ${r()}%, rgba(55, 85, 240, 0.12) 0%, transparent 50%)`,
+          `radial-gradient(circle ${s(200, 240)}px at ${r()}% ${r()}%, rgba(35, 65, 195, 0.14) 0%, transparent 50%)`
+        ];
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+          body::before {
+            background: ${beforeGradients.join(',\n            ')} !important;
+          }
+          body::after {
+            background: ${afterGradients.join(',\n            ')} !important;
+          }
+        `;
+        document.head.appendChild(styleSheet);
+      };
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', randomPositions);
+      } else {
+        randomPositions();
+      }
+    </script>
   <script type="importmap">
 {
   "imports": {

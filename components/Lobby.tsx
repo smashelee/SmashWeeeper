@@ -229,49 +229,49 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
         {toasts.map((toast, index) => (
           <div
             key={toast.id}
-            className="bg-gradient-to-br from-[#374151] to-[#1F2937] border-2 border-[#4B5563] px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-lg pointer-events-auto animate-slide-in-right flex items-center gap-2"
+            className="bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-2 border-[#4a3a27] px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-lg pointer-events-auto animate-slide-in-right flex items-center gap-2"
             style={{ 
               animationDelay: `${index * 0.05}s`
             }}
           >
-            <p className="text-[10px] sm:text-xs font-pixel text-gray-200 whitespace-nowrap">{toast.message}</p>
+            <p className="text-[10px] sm:text-xs font-pixel text-[#f4e8c1] whitespace-nowrap">{toast.message}</p>
           </div>
         ))}
       </div>
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-2.5 sm:p-4 md:p-5">
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-2.5 sm:p-4 md:p-5">
         <div className="text-center">
-          <div className="text-[10px] sm:text-xs text-gray-400 mb-1 sm:mb-2 font-pixel uppercase tracking-wider">{t.modal.roomCode}</div>
+          <div className="text-[10px] sm:text-xs text-[#c5a572] mb-1 sm:mb-2 font-pixel uppercase tracking-wider">{t.modal.roomCode}</div>
           <div className="flex items-center justify-center mb-1 sm:mb-2">
             <button
               onClick={handleCopyCode}
-              className="text-lg sm:text-2xl md:text-3xl font-pixel text-[#60A5FA] tracking-[0.1em] sm:tracking-[0.2em] break-all cursor-pointer hover:underline transition-all duration-200 active:scale-95"
+              className="text-lg sm:text-2xl md:text-3xl font-pixel text-[#9ccc65] tracking-[0.1em] sm:tracking-[0.2em] break-all cursor-pointer hover:underline transition-all duration-200 active:scale-95"
               title={t.modal.copyCode}
             >
               {roomCode}
             </button>
           </div>
           <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-3">
-            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 animate-pulse"></div>
-            <span className="text-[10px] sm:text-xs text-green-400 font-pixel">{t.modal.activeRoom}</span>
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#7cb342] animate-pulse"></div>
+            <span className="text-[10px] sm:text-xs text-[#9ccc65] font-pixel">{t.modal.activeRoom}</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-2.5 sm:p-4">
-        <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase text-center mb-1.5 sm:mb-2">
-          {t.modal.gameMode}: <span className="text-[#60A5FA]">{getModeNameFromTranslation(getGameModeTranslationKey(gameMode), t)}</span>
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-2.5 sm:p-4">
+        <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase text-center mb-1.5 sm:mb-2">
+          {t.modal.gameMode}: <span className="text-[#9ccc65]">{getModeNameFromTranslation(getGameModeTranslationKey(gameMode), t)}</span>
         </div>
-        <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase text-center">
-          {t.modal.pattern}: <span className="text-[#60A5FA]">{(() => {
+        <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase text-center">
+          {t.modal.pattern}: <span className="text-[#9ccc65]">{(() => {
             const metadata = getPatternMetadata(pattern);
             return metadata ? getPatternNameFromTranslation(metadata.translationKey, t) : pattern;
           })()}</span>
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-2.5 sm:p-4">
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-2.5 sm:p-4">
         <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-          <div className="text-[10px] sm:text-xs text-gray-400 font-pixel uppercase text-center">
+          <div className="text-[10px] sm:text-xs text-[#c5a572] font-pixel uppercase text-center">
             {players.length < 2 ? t.modal.waitingForPlayers : `${players.length}/6 ${t.modal.players}`}
           </div>
         </div>
@@ -282,39 +282,39 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
             return (
             <div
               key={player.id}
-              className={`bg-gradient-to-br from-[#374151] to-[#1F2937] border-2 ${
-                player.id === playerId ? 'border-[#6366F1]' : 'border-[#4B5563]'
+              className={`bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] border-2 ${
+                player.id === playerId ? 'border-[#7cb342]' : 'border-[#4a3a27]'
               } rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 flex items-center justify-between transition-all duration-200`}
             >
               <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                 <div 
                   className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-lg border-2 flex-shrink-0 flex items-center justify-center ${
                     player.isReady 
-                      ? 'bg-gradient-to-br from-green-500/20 to-green-600/20 border-green-500/50' 
-                      : 'bg-gradient-to-br from-red-500/20 to-red-600/20 border-red-500/50'
+                      ? 'bg-gradient-to-br from-[#7cb342]/20 to-[#558b2f]/20 border-[#7cb342]/50' 
+                      : 'bg-gradient-to-br from-[#d84315]/20 to-[#bf360c]/20 border-[#d84315]/50'
                   }`}
                 >
                   {player.isReady ? (
-                    <i className="fi fi-br-check-circle text-green-400 text-xs sm:text-sm"></i>
+                    <i className="fi fi-br-check-circle text-[#9ccc65] text-xs sm:text-sm"></i>
                   ) : (
-                    <i className="fi fi-br-cross-circle text-red-400 text-xs sm:text-sm"></i>
+                    <i className="fi fi-br-cross-circle text-[#ff5722] text-xs sm:text-sm"></i>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 sm:gap-2">
                     {isPlayerHost && (
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 bg-gradient-to-br from-purple-500/20 to-purple-600/20 border-purple-500/50 flex items-center justify-center flex-shrink-0 -mt-0.5">
-                        <i className="fi fi-br-crown text-purple-400 text-[10px] sm:text-xs"></i>
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 bg-gradient-to-br from-[#f9a825]/20 to-[#f57f17]/20 border-[#f9a825]/50 flex items-center justify-center flex-shrink-0 -mt-0.5">
+                        <i className="fi fi-br-crown text-[#fdd835] text-[10px] sm:text-xs"></i>
                       </div>
                     )}
-                    <span className="text-xs sm:text-sm font-pixel text-gray-200 truncate">{player.name}</span>
+                    <span className="text-xs sm:text-sm font-pixel text-[#f4e8c1] truncate">{player.name}</span>
                   </div>
-                  <div className="text-[10px] sm:text-xs text-gray-500 font-pixel truncate  mt-1">ID: {player.id.substring(0, 6)}</div>
+                  <div className="text-[10px] sm:text-xs text-[#f4e8c1] font-pixel truncate  mt-1">ID: {player.id.substring(0, 6)}</div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 <div 
-                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-[#4B5563]"
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-[#4a3a27]"
                   style={{ backgroundColor: 
                     player.flagColor === 'yellow' ? '#FBBF24' : 
                     player.flagColor === 'red' ? '#F87171' :
@@ -343,8 +343,8 @@ export const Lobby: React.FC<LobbyProps> = ({ roomCode, isHost, playerId, initia
       </div>
 
       {allReady && (
-        <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 border-2 border-green-500/50 rounded-xl p-2 sm:p-3">
-          <div className="text-center text-xs sm:text-sm font-pixel text-green-400 flex items-center justify-center gap-1.5 sm:gap-2">
+        <div className="bg-gradient-to-br from-[#7cb342]/20 to-[#558b2f]/20 border-2 border-[#7cb342]/50 rounded-xl p-2 sm:p-3">
+          <div className="text-center text-xs sm:text-sm font-pixel text-[#9ccc65] flex items-center justify-center gap-1.5 sm:gap-2">
             <i className="fi fi-br-check-circle text-xs sm:text-sm"></i>
             {t.modal.allReady}
           </div>

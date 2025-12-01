@@ -34,16 +34,16 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
       onClick={handleBackdropClick}
     >
       <div 
-        className={`bg-gradient-to-br from-[#9CA3AF] to-[#6B7280] p-0.5 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-2xl w-full ${maxWidthClass} border border-[#D1D5DB]/20 max-h-[90vh] overflow-y-auto`}
+        className={`bg-gradient-to-br from-[#8b6f47] to-[#6b4423] p-0.5 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-2xl w-full ${maxWidthClass} border border-[#a0826d]/20 max-h-[90vh] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-gradient-to-br from-[#374151] to-[#1F2937] p-2.5 sm:p-4 md:p-6 border-2 border-[#4B5563]/50 rounded-lg sm:rounded-xl flex flex-col shadow-inner min-h-0">
-          <div className="flex justify-between items-center mb-2 sm:mb-4 border-b-2 border-gray-700/50 pb-1.5 sm:pb-3">
-            <h3 className="text-sm sm:text-lg md:text-xl text-[#D1D5DB] font-pixel uppercase tracking-wider pr-2">{title}</h3>
+        <div className="bg-gradient-to-br from-[#5a4a2f] to-[#3a2817] p-2.5 sm:p-4 md:p-6 border-2 border-[#4a3a27]/50 rounded-lg sm:rounded-xl flex flex-col shadow-inner min-h-0">
+          <div className="flex justify-between items-center mb-2 sm:mb-4 border-b-2 border-[#4a3a27]/50 pb-1.5 sm:pb-3">
+            <h3 className="text-sm sm:text-lg md:text-xl text-[#f4e8c1] font-pixel uppercase tracking-wider pr-2">{title}</h3>
             {showXButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-white transition-all duration-200 p-1 sm:p-1.5 rounded-lg hover:bg-gray-700/50 active:scale-90 flex-shrink-0"
+                className="text-[#c5a572] hover:text-white transition-all duration-200 p-1 sm:p-1.5 rounded-lg hover:bg-[#6b4423]/50 active:scale-90 flex-shrink-0"
                 aria-label="Close"
               >
                 <svg
@@ -63,7 +63,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
               </button>
             )}
           </div>
-          <div className="text-gray-200 text-xs sm:text-sm leading-relaxed">
+          <div className="text-[#f4e8c1] text-xs sm:text-sm leading-relaxed">
             {children}
           </div>
           {showCloseButton && (

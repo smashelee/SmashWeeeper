@@ -87,12 +87,12 @@ export const JoinRoom: React.FC<JoinRoomProps> = ({ onBack, onJoin }) => {
 
   return (
     <div className="flex flex-col gap-2.5 sm:gap-4 md:gap-6 w-full">
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-3 sm:p-5 md:p-6">
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-3 sm:p-5 md:p-6">
         <div className="text-center mb-2.5 sm:mb-4">
-          <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-2 sm:mb-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#6366F1] to-[#4F46E5] flex items-center justify-center shadow-lg">
-          <i className="fi fi-br-lock text-white text-base sm:text-xl md:text-2xl"></i>
+          <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-2 sm:mb-3 rounded-lg sm:rounded-xl border-2 bg-gradient-to-br from-[#7cb342]/20 to-[#558b2f]/20 border-[#7cb342]/50 flex items-center justify-center shadow-lg">
+          <i className="fi fi-br-lock text-[#9ccc65] text-base sm:text-xl md:text-2xl"></i>
           </div>
-          <label className="text-[10px] sm:text-sm text-gray-300 font-pixel uppercase tracking-wider">{t.modal.enterCode}</label>
+          <label className="text-[10px] sm:text-sm text-[#f4e8c1] font-pixel uppercase tracking-wider">{t.modal.enterCode}</label>
         </div>
         
         <div>
@@ -102,31 +102,31 @@ export const JoinRoom: React.FC<JoinRoomProps> = ({ onBack, onJoin }) => {
             onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
             placeholder="*****"
             maxLength={5}
-            className="w-full bg-gradient-to-br from-[#1F2937] to-[#111827] border-2 border-[#4B5563] px-2.5 sm:px-4 md:px-6 py-2.5 sm:py-3.5 md:py-4 rounded-lg sm:rounded-xl font-pixel text-base sm:text-xl md:text-2xl text-center text-[#60A5FA] tracking-[0.15em] sm:tracking-[0.3em] focus:outline-none focus:border-[#6366F1] focus:shadow-lg focus:shadow-[#6366F1]/20 uppercase transition-all duration-200"
+            className="w-full bg-gradient-to-br from-[#2a1810] to-[#3a2817] border-2 border-[#4a3a27] px-2.5 sm:px-4 md:px-6 py-2.5 sm:py-3.5 md:py-4 rounded-lg sm:rounded-xl font-pixel text-base sm:text-xl md:text-2xl text-center text-[#9ccc65] placeholder:text-[#9ccc65] tracking-[0.15em] sm:tracking-[0.3em] focus:outline-none focus:border-[#7cb342] focus:shadow-lg focus:shadow-[#7cb342]/20 uppercase transition-all duration-200"
           />
           {roomCode.trim().length > 0 && (
             <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-3">
               {roomCode.trim().length === 5 ? (
                 roomExists === null ? (
                   <>
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-500"></div>
-                    <span className="text-[10px] sm:text-xs text-gray-400 font-pixel">{t.modal.waiting}</span>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#8b6f47]"></div>
+                    <span className="text-[10px] sm:text-xs text-[#c5a572] font-pixel">{t.modal.waiting}</span>
                   </>
                 ) : roomExists === true ? (
                   <>
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 animate-pulse"></div>
-                    <span className="text-[10px] sm:text-xs text-green-400 font-pixel">{t.modal.activeRoom}</span>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#7cb342] animate-pulse"></div>
+                    <span className="text-[10px] sm:text-xs text-[#9ccc65] font-pixel">{t.modal.activeRoom}</span>
                   </>
                 ) : (
                   <>
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-400 animate-pulse"></div>
-                    <span className="text-[10px] sm:text-xs text-red-400 font-pixel">{t.modal.notFound}</span>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#d84315] animate-pulse"></div>
+                    <span className="text-[10px] sm:text-xs text-[#ff5722] font-pixel">{t.modal.notFound}</span>
                   </>
                 )
               ) : (
                 <>
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-500"></div>
-                  <span className="text-[10px] sm:text-xs text-gray-400 font-pixel">{t.modal.codeIncomplete}</span>
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#8b6f47]"></div>
+                  <span className="text-[10px] sm:text-xs text-[#c5a572] font-pixel">{t.modal.codeIncomplete}</span>
                 </>
               )}
             </div>

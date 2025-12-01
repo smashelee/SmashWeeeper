@@ -24,8 +24,8 @@ export const GameModeSelect: React.FC<GameModeSelectProps> = ({ onSelect, onBack
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5 md:gap-4 w-full">
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-4 sm:p-4 md:p-3.5 space-y-4 sm:space-y-3 md:space-y-3">
-        <div className="text-[10px] sm:text-xs md:text-xs text-gray-400 font-pixel uppercase mb-3 sm:mb-3 md:mb-3 text-center">{t.modal.gameMode}</div>
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-4 sm:p-4 md:p-3.5 space-y-4 sm:space-y-3 md:space-y-3">
+        <div className="text-[10px] sm:text-xs md:text-xs text-[#c5a572] font-pixel uppercase mb-3 sm:mb-3 md:mb-3 text-center">{t.modal.gameMode}</div>
         
         <div className="flex gap-2 sm:gap-3 md:gap-2.5">
           {availableModes.map(({ mode, metadata }) => (
@@ -41,8 +41,8 @@ export const GameModeSelect: React.FC<GameModeSelectProps> = ({ onSelect, onBack
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-[#111827] to-[#1F2937] border-2 border-[#4B5563] rounded-lg sm:rounded-xl p-4 sm:p-4 md:p-3.5 space-y-4 sm:space-y-3 md:space-y-3">
-        <div className="text-[10px] sm:text-xs md:text-xs text-gray-400 font-pixel uppercase mb-3 sm:mb-3 md:mb-3 text-center">{t.modal.pattern}</div>
+      <div className="bg-gradient-to-br from-[#3a2817] to-[#2a1810] border-2 border-[#4a3a27] rounded-lg sm:rounded-xl p-4 sm:p-4 md:p-3.5 space-y-4 sm:space-y-3 md:space-y-3">
+        <div className="text-[10px] sm:text-xs md:text-xs text-[#c5a572] font-pixel uppercase mb-3 sm:mb-3 md:mb-3 text-center">{t.modal.pattern}</div>
         
         <div className="flex gap-2 sm:gap-3 md:gap-2.5">
           {availablePatterns.map(({ pattern, metadata }) => (

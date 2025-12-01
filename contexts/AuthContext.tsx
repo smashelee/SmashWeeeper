@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { settingsClient, setUserId } from '../utils/settingsClient';
 import { apiClient, User } from '../utils/apiClient';
+import { decryptUserId } from '../utils/userIdEncryption';
 
 const getApiUrl = (): string => {
   if (typeof window !== 'undefined') {
@@ -39,8 +40,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           try {
             const localUserId = localStorage.getItem('userId');
             if (localUserId) {
-              const userId = parseInt(localUserId, 10);
-              if (!isNaN(userId)) {
+              const userId = decryptUserId(localUserId);
+              if (userId !== null) {
                 savedUserId = userId;
                 setUserId(userId);
               }

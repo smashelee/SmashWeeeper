@@ -1,51 +1,32 @@
-let winSoundEnabled = true;
-let loseSoundEnabled = true;
+let sounds = { victory: true, defeat: true };
 const activeAudioElements: HTMLAudioElement[] = [];
 
 if (typeof window !== 'undefined') {
   try {
-    const savedWin = localStorage.getItem('winSoundEnabled');
-    if (savedWin !== null) {
-      winSoundEnabled = savedWin === 'true';
-    }
-    const savedLose = localStorage.getItem('loseSoundEnabled');
-    if (savedLose !== null) {
-      loseSoundEnabled = savedLose === 'true';
+    const savedConfig = localStorage.getItem('gameConfig');
+    if (savedConfig) {
+      const parsed = JSON.parse(savedConfig);
+      if (parsed.sounds) {
+        sounds = {
+          victory: parsed.sounds.victory !== false,
+          defeat: parsed.sounds.defeat !== false
+        };
+      }
     }
   } catch (error) {
     console.warn('Failed to load sounds settings:', error);
   }
   
-  window.addEventListener('winSoundEnabledChanged', ((e: CustomEvent) => {
-    winSoundEnabled = e.detail;
-    try {
-      localStorage.setItem('winSoundEnabled', e.detail.toString());
-    } catch (error) {
-      console.warn('Failed to save win sound setting:', error);
-    }
-  }) as EventListener);
-  
-  window.addEventListener('loseSoundEnabledChanged', ((e: CustomEvent) => {
-    loseSoundEnabled = e.detail;
-    try {
-      localStorage.setItem('loseSoundEnabled', e.detail.toString());
-    } catch (error) {
-      console.warn('Failed to save lose sound setting:', error);
-    }
+  window.addEventListener('soundsChanged', ((e: CustomEvent) => {
+    sounds = e.detail;
   }) as EventListener);
 }
 
-export const setWinSoundEnabled = (enabled: boolean): void => {
-  winSoundEnabled = enabled;
-};
-
-export const setLoseSoundEnabled = (enabled: boolean): void => {
-  loseSoundEnabled = enabled;
+export const setSounds = (newSounds: { victory: boolean; defeat: boolean }): void => {
+  sounds = newSounds;
 };
 
 export const playSound = (soundName: string, volume: number = 0.5, checkEnabled: boolean = true): void => {
-  if (!checkEnabled) return;
-  
   try {
     const baseUrl = (import.meta as any).env?.BASE_URL || '/';
     const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -110,11 +91,11 @@ export const stopAllSounds = (): void => {
 };
 
 export const playLoseSound = (): void => {
-  if (!loseSoundEnabled) return;
+  if (!sounds.defeat) return;
   playSound('lose/lose.mp3', 0.5, true);
 };
 
 export const playWinSound = (): void => {
-  if (!winSoundEnabled) return;
+  if (!sounds.victory) return;
   playSound('win/win.mp3', 0.5, true);
 };

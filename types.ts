@@ -19,6 +19,10 @@ export interface GameConfig {
   mines: number;
   gameMode?: GameMode;
   pattern?: PatternId;
+  sounds?: {
+    victory: boolean;
+    defeat: boolean;
+  };
 }
 
 export enum AppScreen {
